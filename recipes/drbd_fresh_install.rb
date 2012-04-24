@@ -9,6 +9,11 @@
 
 include_recipe 'drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
+resource = "data"
+
+my_ip = node[:my_expected_crossover_ip]
+remote_ip = node[:server_partner_ip]
+node[:drbd][:remote_host] = node[:server_partner_hostname]
 
 ruby_block "check if other server is primary" do
     block do
