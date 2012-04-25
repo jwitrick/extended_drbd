@@ -23,7 +23,7 @@ resource <%= @resource %> {
     meta-disk internal;
   }
   syncer {
-     rate <% node['drbd']['syncrate'];
+     rate <%= node['drbd']['syncrate']%>;
   }
 }
 

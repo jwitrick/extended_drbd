@@ -1,3 +1,4 @@
+default[:drbd][:packages] = ["kmod-drbd83", "drbd83"]
 
 default[:drbd][:remote_host] = nil
 default[:drbd][:disk] = "/dev/local/data"
@@ -9,3 +10,13 @@ default[:drbd][:port] = 7789
 default[:drbd][:configured] = false
 default[:drbd][:stop_file] = "/etc/drbd_stop_file"
 default[:drbd][:syncrate] = "36M"
+default[:drbd][:resource] = "data"
+
+default[:my_expected_ip] = ''
+default[:server_partner_ip] =''
+default[:server_partner_hostname] = ''
+
+default[:drbd][:primary][:designation] = 'a'
+default[:drbd][:secondary][:designation] = 'b'
+
+default[:server_letter] = ""

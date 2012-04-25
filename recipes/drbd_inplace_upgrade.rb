@@ -10,7 +10,7 @@ include_recipe 'drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 resource = "data"
 
-my_ip = node[:my_expected_crossover_ip]
+my_ip = node[:my_expected_ip]
 remote_ip = node[:server_partner_ip]
 node[:drbd][:remote_host] = node[:server_partner_hostname]
 
@@ -28,7 +28,7 @@ template "/etc/drbd.conf" do
 end
 
 execute "create stop files" do
-    command "Creating stop files"
+    command "echo 'Creating stop files'"
     not_if "#{stop_file_exists_command}"
     notifies :create, "file[/etc/drbd_initialized_file]", :immediately
     notifies :create, "file[#{node[:drbd][:stop_file]}]", :immediately

@@ -11,7 +11,7 @@ include_recipe "mailserver_common"
 
 node[:drbd][:packages].each do |p|
     yum_package p do
-        version node[:drbd]['#{p}'][:version] if node[:drbd]['#{p}'][:version]
+        version node[:drbd]['#{p}'][:version] if defined? node[:drbd]['#{p}'][:version]
         allow_downgrade true
         action :install
     end
@@ -40,7 +40,7 @@ end
 file "/etc/drbd_synced_stop_file" do
     mode 0777
     action :nothing
-    notifies :run, "execute[change permissions on /etc/drbd_synced_file]", :immediately
+    notifies :run, "execute[change permissions on /etc/drbd_synced_stop_file]", :immediately
 end
 
 execute "change permissions on /etc/drbd_synced_stop_file" do

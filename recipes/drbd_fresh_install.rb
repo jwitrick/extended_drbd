@@ -9,21 +9,21 @@
 
 include_recipe 'drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
-resource = "data"
+resource = node[:drbd][:resource]
 
-my_ip = node[:my_expected_crossover_ip]
+my_ip = node[:my_expected_ip]
 remote_ip = node[:server_partner_ip]
 node[:drbd][:remote_host] = node[:server_partner_hostname]
 
 ruby_block "check if other server is primary" do
     block do
-        partner_primary = system("ssh #{node[:server_partner_crossover_ip]} drbdadm role data | grep -q 'Primary/'")
+        partner_primary = system("ssh #{remote_ip} drbdadm role data | grep -q 'Primary/'")
         if not partner_primary
             node[:drbd][:master] = true
             Chef::Log.info("This is a DRBD master")
         end
     end
-    only_if {"#{node[:server_letter]}".eql? "a" }
+    only_if {"#{node[:server_letter]}".eql? "#{node[:drbd][:primary][:designation]}" }
 end
 
 template "/etc/drbd.conf" do
