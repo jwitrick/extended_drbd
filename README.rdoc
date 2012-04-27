@@ -4,12 +4,17 @@ drbd.
 Please Note: this cookbook does not mount the drbd drive.
 
 This cookbook can be used in the following situations:
+
 1) Fresh server pair installation (please see below for how to use).
+
 2) Adding a server to another server running drbd.
+
 3) Change drbd.conf file and have drbd update with out restarting.
 
 How to use when creating a fresh server pair:
+
 Prerequisites:
+
 Chef client must be installed on both servers.
 The disk location (node[:drbd][:disk]) must exist.
 The servers must be able to ssh to the other server.
