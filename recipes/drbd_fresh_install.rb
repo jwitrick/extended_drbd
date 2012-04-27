@@ -13,7 +13,17 @@ resource = node[:drbd][:resource]
 
 my_ip = node[:my_expected_ip]
 remote_ip = node[:server_partner_ip]
-node[:drbd][:remote_host] = node[:server_partner_hostname]
+if node[:drbd][:remote_host] == ''
+    node[:drbd][:remote_host] = node[:server_partner_hostname]
+end
+if remote_ip == ''
+    remote = search(:node, "name:#{node['drbd']['remote_host']}")[0]
+    remote_ip = remote.ipaddress
+end
+
+if my_ip == ''
+    my_ip = node[:ipaddress]
+end
 
 ruby_block "check if other server is primary" do
     block do

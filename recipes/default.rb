@@ -2,12 +2,6 @@
 # Cookbook Name:: mailserver_provisioning
 # Recipe:: drbd
 #
-# Copyright 2012, RACKSPACE
-#
-# All rights reserved - Do Not Redistribute
-#
-#
-include_recipe "mailserver_common"
 
 node[:drbd][:packages].each do |p|
     yum_package p do
