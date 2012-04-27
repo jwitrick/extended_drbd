@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+  },
+  "name": "drbd",
+  "maintainer_email": "github@thewitricks.com",
+  "attributes": {
+  },
+  "license": "GPL 2",
+  "suggestions": {
+  },
+  "platforms": {
+  },
+  "maintainer": "Justin Witrick",
+  "long_description": "= Description:\nThis cookbook is designed to setup and configure a pair of server with\ndrbd.\nPlease Note: this cookbook does not mount the drbd drive.\n\nThis cookbook can be used in the following situations:\n\n1) Fresh server pair installation (please see below for how to use).\n\n2) Adding a server to another server running drbd.\n\n3) Change drbd.conf file and have drbd update with out restarting.\n\n\n== How to use when creating a fresh server pair:\n\nPrerequisites:\n\n- Chef client must be installed on both servers.\n\n- The disk location (node[:drbd][:disk]) must exist.\n\n- The servers must be able to ssh to the other server.\n\nNote: In order for this work properly both servers need to be running chef\nat the same time,\n\nThere are 2 ways to specify a drbd primary. 1) set an override\nattribute on the node directly \"drbd\":{\"master\"=true} 2) set\nan attribute \"server_letter\" as 'a'\n\nOnce one server has been specified as drbd master you can add the recipe\n\"drbd::drbd_fresh_install\" to the run_list of both servers.\n\n== How to use when adding a new server to another server running drbd:\n\nThis is the same as above except the new server is not specified as the drbd\nmaster, and you dont have to be running chef-client on the other server.\n\n== How to use when changing the drbd.conf file:\n\nOn which ever server you are updated (or both) add the recipe\n\"drbd::drbd_inplace_upgrade\" to the server's run_list. And the next\ntime Chef-client runs it will preform the changes in a safe way.\n\nThe ways I have used this have been to call this drbd cookbook from within\nanother cookbook, and have the second cookbook do the logic of decided whether\nor not this is a fresh install or inplace upgrade.\n\nHere is how I use it:\n\n if system(\" [ -f /etc/drbd.conf ] \")\n    include_recipe \"drbd::drbd_inplace_upgrade\"\n else\n    include_recipe \"drbd::drbd_fresh_install\"\n end\n\n= ATTRIBUTES:\ndefault[:drbd][:packages] = [\"kmod-drbd83\", \"drbd83\"]\n\ndefault[:drbd][:remote_host] = nil\n\ndefault[:drbd][:disk] = \"/dev/local/data\"\n\ndefault[:drbd][:mount] = \"/data\"\n\ndefault[:drbd][:fs_type] = \"ext3\"\n\ndefault[:drbd][:dev] = \"/dev/drbd0\"\n\ndefault[:drbd][:master] = false\n\ndefault[:drbd][:port] = 7789\n\ndefault[:drbd][:configured] = false\n\ndefault[:drbd][:stop_file] = \"/etc/drbd_stop_file\"\n\ndefault[:drbd][:syncrate] = \"36M\"\n\ndefault[:drbd][:resource] = \"data\"\n\ndefault[:my_expected_ip] = ''\n\ndefault[:server_partner_ip] =''\n\ndefault[:server_partner_hostname] = ''\n\ndefault[:drbd][:primary][:designation] = 'a'\n\ndefault[:drbd][:secondary][:designation] = 'b'\n\ndefault[:server_letter] = \"\"\n\n\n= License\nDRBD Chef Recipe\nCopyright (C) 2012 Justin Witrick\n\nThis program is free software; you can redistribute it and/or\nmodify it under the terms of the GNU General Public License\nas published by the Free Software Foundation; either version 2\nof the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program; if not, write to the Free Software\nFoundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,\nUSA.\n",
+  "version": "0.0.1",
+  "recommendations": {
+  },
+  "recipes": {
+  },
+  "groupings": {
+  },
+  "conflicting": {
+  },
+  "replacing": {
+  },
+  "description": "DRBD recipe",
+  "providing": {
+  }
+}
