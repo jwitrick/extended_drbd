@@ -25,15 +25,15 @@ resource = "data"
 
 my_ip = node[:my_expected_ip]
 remote_ip = node[:server_partner_ip]
-if node[:drbd][:remote_host] == ''
+if node[:drbd][:remote_host].nil?
     node[:drbd][:remote_host] = node[:server_partner_hostname]
 end
-if remote_ip == ''
+if remote_ip.nil?
     remote = search(:node, "name:#{node['drbd']['remote_host']}")[0]
     remote_ip = remote.ipaddress
 end
 
-if my_ip == ''
+if my_ip.nil?
     my_ip = node[:ipaddress]
 end
 
