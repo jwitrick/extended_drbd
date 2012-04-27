@@ -19,7 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 #
-include_recipe 'drbd'
+include_recipe 'extended_drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 resource = "data"
 

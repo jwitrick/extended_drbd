@@ -19,7 +19,7 @@
 # USA.
 #
 
-include_recipe 'drbd'
+include_recipe 'extended_drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 resource = node[:drbd][:resource]
 

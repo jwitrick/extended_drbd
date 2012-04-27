@@ -1,7 +1,7 @@
 {
   "dependencies": {
   },
-  "name": "drbd",
+  "name": "extended_drbd",
   "maintainer_email": "github@thewitricks.com",
   "attributes": {
   },
