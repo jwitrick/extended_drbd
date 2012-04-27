@@ -50,9 +50,9 @@ or not this is a fresh install or inplace upgrade.
 Here is how I use it:
 
  if system(" [ -f /etc/drbd.conf ] ")
-    include_recipe "drbd::drbd_inplace_upgrade"
+    include_recipe "extended_drbd::drbd_inplace_upgrade"
  else
-    include_recipe "drbd::drbd_fresh_install"
+    include_recipe "extended_drbd::drbd_fresh_install"
  end
 
 = ATTRIBUTES:
