@@ -22,20 +22,12 @@
 include_recipe 'extended_drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 resource = node[:drbd][:resource]
+my_ip = node[:my_expected_ip].nil? ? node[:ipaddress] : node[:my_expected_ip]
 
-my_ip = node[:my_expected_ip]
 remote_ip = node[:server_partner_ip]
-
-if node[:drbd][:remote_host].nil?
-    node[:drbd][:remote_host] = node[:server_partner_hostname]
-end
 if remote_ip.nil?
-    remote = search(:node, "name:#{node['drbd']['remote_host']}")[0]
+    remote = search(:node, "name:#{node['server_partner_hostname']}")[0]
     remote_ip = remote.ipaddress
-end
-
-if my_ip.nil?
-    my_ip = node[:ipaddress]
 end
 
 ruby_block "check if other server is primary" do
@@ -47,18 +39,6 @@ ruby_block "check if other server is primary" do
         end
     end
     only_if {"#{node[:server_letter]}".eql? "#{node[:drbd][:primary][:designation]}" }
-end
-
-template "/etc/drbd.conf" do
-    source "drbd.conf.erb"
-    variables(
-        :resource => resource,
-        :my_ip => my_ip,
-        :remote_ip => remote_ip
-    )
-    owner "root"
-    group "root"
-    action :create
 end
 
 execute "drbdadm create-md all" do

@@ -21,34 +21,6 @@
 #
 include_recipe 'extended_drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
-resource = "data"
-
-my_ip = node[:my_expected_ip]
-remote_ip = node[:server_partner_ip]
-if node[:drbd][:remote_host].nil?
-    node[:drbd][:remote_host] = node[:server_partner_hostname]
-end
-if remote_ip.nil?
-    remote = search(:node, "name:#{node['drbd']['remote_host']}")[0]
-    remote_ip = remote.ipaddress
-end
-
-if my_ip.nil?
-    my_ip = node[:ipaddress]
-end
-
-template "/etc/drbd.conf" do
-    source "drbd.conf.erb"
-    variables(
-        :resource => resource,
-        :my_ip => my_ip,
-        :remote_ip => remote_ip
-    )
-    owner "root"
-    group "root"
-    action :create
-    notifies :run, "execute[adjust drbd]", :immediately
-end
 
 execute "create stop files" do
     command "echo 'Creating stop files'"

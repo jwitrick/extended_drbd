@@ -10,16 +10,16 @@ common {
   protocol C;
 }
 resource <%= @resource %> {
-  on <%= node.name %> {
+  on <%= @primary_short_hostname %> {
     device    <%= node['drbd']['dev'] %>;
     disk      <%= node['drbd']['disk'] %>;
-    address   <%=@my_ip%>:<%= node['drbd']['port'] %>;
+    address   <%=@primary_ip%>:<%= node['drbd']['port'] %>;
     meta-disk internal;
   }
-  on <%= node['drbd']['remote_host'] %> {
+  on <%= @secondary_short_hostname %> {
     device    <%= node['drbd']['dev'] %>;
     disk      <%= node['drbd']['disk'] %>;
-    address   <%= @remote_ip %>:<%= node['drbd']['port'] %>;
+    address   <%= @secondary_ip %>:<%= node['drbd']['port'] %>;
     meta-disk internal;
   }
   syncer {

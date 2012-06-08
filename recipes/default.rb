@@ -20,12 +20,28 @@
 # USA.
 #
 
+stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 node[:drbd][:packages].each do |p|
     yum_package p do
         version node[:drbd]['#{p}'][:version] if defined? node[:drbd]['#{p}'][:version]
         allow_downgrade true
         action :install
     end
+end
+
+template "/etc/drbd.conf" do
+    source "drbd.conf.erb"
+    variables(
+        :resource => node[:drbd][:resource],
+        :primary_ip => node[:drbd][:primary][:ip],
+        :primary_short_hostname => node[:drbd][:primary][:short_hostname],
+        :secondary_ip => node[:drbd][:secondary][:ip],
+        :secondary_short_hostname => node[:drbd][:secondary][:short_hostname]
+    )
+    owner "root"
+    group "root"
+    action :create
+    notifies :run, "execute[adjust drbd]", :immediately
 end
 
 service 'drbd' do
@@ -36,6 +52,7 @@ end
 execute "adjust drbd" do
     command "drbdadm adjust all"
     action :nothing
+    only_if "#{stop_file_exists_command}"
 end
 
 file "/etc/drbd_initialized_file" do
