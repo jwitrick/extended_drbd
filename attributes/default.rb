@@ -11,6 +11,7 @@ default[:drbd][:configured] = false
 default[:drbd][:stop_file] = "/etc/drbd_stop_file"
 default[:drbd][:syncrate] = "36M"
 default[:drbd][:resource] = "data"
+default[:drbd][:config_file] = "/etc/drbd.conf"
 
 default[:my_expected_ip] = nil
 default[:server_partner_ip] = nil

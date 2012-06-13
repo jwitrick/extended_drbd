@@ -21,6 +21,7 @@
 #
 
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
+inplace = File.exists?("#{node['drbd']['config_file']}")
 node[:drbd][:packages].each do |p|
     yum_package p do
         version node[:drbd]['#{p}'][:version] if defined? node[:drbd]['#{p}'][:version]
@@ -29,7 +30,7 @@ node[:drbd][:packages].each do |p|
     end
 end
 
-template "/etc/drbd.conf" do
+template node['drbd']['config_file'] do
     source "drbd.conf.erb"
     variables(
         :resource => node[:drbd][:resource],
@@ -52,7 +53,7 @@ end
 execute "adjust drbd" do
     command "drbdadm adjust all"
     action :nothing
-    only_if "#{stop_file_exists_command}"
+    only_if {inplace}
 end
 
 file "/etc/drbd_initialized_file" do
