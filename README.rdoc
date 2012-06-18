@@ -80,6 +80,14 @@ default[:drbd][:syncrate] = "36M"
 
 default[:drbd][:resource] = "data"
 
+default[:drbd][:primary][:short_hostname] = "<result of command 'hostname'>"
+
+default[:drbd][:primary][:ip] = ""
+
+default[:drbd][:secondary][:short_hostname] = "<result of command 'hostname'>"
+
+default[:drbd][:secondary][:ip] = ""
+
 default[:my_expected_ip] = ''
 
 default[:server_partner_ip] =''
