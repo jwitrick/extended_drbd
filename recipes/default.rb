@@ -59,17 +59,17 @@ end
 extended_drbd_immutable_file "/etc/drbd_initialized_file" do
     file_name "/etc/drbd_initialied_file"
     content "This file is for drbd and chef to signify drbd is initialized"
-    action :create
+    action :nothing
 end
 
 extended_drbd_immutable_file "/etc/drbd_synced_stop_file" do
     file_name "/etc/drbd_synced_stop_file"
     content "This file is for drbd and chef to signify drbd is synchronized"
-    action :create
+    action :nothing
 end
 
 extended_drbd_immutable_file "#{node[:drbd][:stop_file]}" do
     file_name "#{node[:drbd][:stop_file]}"
     content "This file is for drbd and chef to signify drbd is fully configured"
-    action :create
+    action :nothing
 end
