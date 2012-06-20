@@ -57,7 +57,7 @@ execute "adjust drbd" do
 end
 
 extended_drbd_immutable_file "/etc/drbd_initialized_file" do
-    file_name "/etc/drbd_initialied_file"
+    file_name "/etc/drbd_initialized_file"
     content "This file is for drbd and chef to signify drbd is initialized"
     action :nothing
 end
