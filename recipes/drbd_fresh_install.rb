@@ -46,33 +46,13 @@ execute "drbdadm create-md all" do
     only_if {!system("#{stop_file_exists_command}") and system("drbd-overview | grep -q \"drbd not loaded\"")}
     action :run
     notifies :restart, resources(:service => 'drbd'), :immediately
-    notifies :create, "extended_drbd_immutable_file[/etc/drbd_initialized_file]", :immediately
+    notifies :create, "extended_drbd_immutable_file[/etc/drbd_initialized_file]"
 end
 
-#wait_til "drbd_initilized on other server" do
-#    command "ssh -q #{remote_ip} [ -f /etc/drbd_initialized_file ] "
-#    message "Wait for drbd to be initizlized on #{remote_ip}"
-#    wait_interval 5
-#    not_if "#{stop_file_exists_command}"
-#end
-ruby_block "wait_til_drbd_initialized on other server" do
-    block do
-        drbd_initialized = false
-        until drbd_initialized == true do
-            begin
-            if system("ssh -q #{remote_ip} [ -f /etc/drbd_initialized_file ] ")
-                drbd_initialized = true
-                Chef::Log.info("DRBD Server is initialized on other server")
-            else
-                Chef::Log.info("Waiting on DRBD to be initialized on other server")
-                sleep 5
-            end
-            rescue
-                Chef::Log.info("Waiting on DRBD to be initialized on other server")
-                sleep 5
-            end
-        end
-    end
+wait_til "drbd_initilized on other server" do
+    command "ssh -q #{remote_ip} [ -f /etc/drbd_initialized_file ] "
+    message "Wait for drbd to be initizlized on #{remote_ip}"
+    wait_interval 5
     not_if "#{stop_file_exists_command}"
 end
 
@@ -94,25 +74,13 @@ execute "change sync rate on secondary server only if this is an inplace upgrade
     not_if {node[:drbd][:master] or system("#{stop_file_exists_command}")}
 end
 
-#wait_til_not "wait until drbd is in a constant state" do
-#    command "grep -q ds:.*Inconsistent /proc/drbd"
-#    message "Wait until drbd is not in an inconsistent state"
-#    wait_interval 5
-#    not_if "#{stop_file_exists_command}"
-#    notifies :run, "execute[adjust drbd]", :immediately
-#    notifies :create, "extended_drbd_immutable_file[/etc/drbd_synced_stop_file]"
-#end
-ruby_block "wait for it to be in a consistent state" do
-    block do
-        until not system("grep -q ds:.*Inconsistent /proc/drbd") do
-            current_rate = %x(sed -n 5p /proc/drbd | sed -e 's/^[ \\t]*//' | cut -d' ' -f3 |tr -d '\n')
-            Chef::Log.info("Waiting on drbd to sync. Current Rate: #{current_rate}")
-            sleep 60
-        end
-    end
+wait_til_not "wait until drbd is in a constant state" do
+    command "grep -q ds:.*Inconsistent /proc/drbd"
+    message "Wait until drbd is not in an inconsistent state"
+    wait_interval 5
     not_if "#{stop_file_exists_command}"
     notifies :run, "execute[adjust drbd]", :immediately
-    notifies :create, "extended_drbd_immutable_file[/etc/drbd_synced_stop_file]", :immediately
+    notifies :create, "extended_drbd_immutable_file[/etc/drbd_synced_stop_file]"
 end
 
 ruby_block "check configuration on both servers" do
