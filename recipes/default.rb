@@ -73,3 +73,31 @@ extended_drbd_immutable_file "#{node[:drbd][:stop_file]}" do
     content "This file is for drbd and chef to signify drbd is fully configured"
     action :nothing
 end
+
+file "/etc/drbd_initialized_file" do
+    action :nothing
+    notifies :run, "execute[change permissions on /etc/drbd_initialized_file]", :immediately
+end
+execute "change permissions on /etc/drbd_initialized_file" do
+    command "chattr +i /etc/drbd_initialized_file"
+    action :nothing
+end
+file "/etc/drbd_synced_stop_file" do
+    mode 0777
+    action :nothing
+    notifies :run, "execute[change permissions on /etc/drbd_synced_stop_file]", :immediately
+end
+execute "change permissions on /etc/drbd_synced_stop_file" do
+    command "chattr +i /etc/drbd_synced_stop_file"
+    action :nothing
+end
+file "#{node[:drbd][:stop_file]}" do
+    mode 0777
+    action :nothing
+    notifies :run, "execute[change permissions on #{node[:drbd][:stop_file]}]", :immediately
+end
+
+execute "change permissions on #{node[:drbd][:stop_file]}" do
+    command "chattr +i #{node[:drbd][:stop_file]}"
+    action :nothing
+end

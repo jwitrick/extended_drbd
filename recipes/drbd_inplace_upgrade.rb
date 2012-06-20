@@ -25,6 +25,8 @@ stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 execute "create stop files" do
     command "echo 'Creating stop files'"
     not_if "#{stop_file_exists_command}"
-    notifies :create, "extended_drbd_immutable_file[/etc/drbd_initialized_file]"
-    notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:stop_file]}]"
+    #notifies :create, "extended_drbd_immutable_file[/etc/drbd_initialized_file]"
+    #notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:stop_file]}]"
+    notifies :create, "file[/etc/drbd_initialized_file]", :immediately
+    notifies :create, "file[#{node[:drbd][:stop_file]}]", :immediately
 end
