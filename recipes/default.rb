@@ -56,14 +56,14 @@ execute "adjust drbd" do
     only_if {inplace}
 end
 
-extended_drbd_immutable_file "/etc/drbd_initialized_file" do
-    file_name "/etc/drbd_initialized_file"
+extended_drbd_immutable_file "#{node[:drbd][:initialized][:stop_file]}" do
+    file_name "#{node[:drbd][:initialized][:stop_file]}"
     content "This file is for drbd and chef to signify drbd is initialized"
     action :nothing
 end
 
-extended_drbd_immutable_file "/etc/drbd_synced_stop_file" do
-    file_name "/etc/drbd_synced_stop_file"
+extended_drbd_immutable_file "#{node[:drbd][:synced][:stop_file]}" do
+    file_name "#{node[:drbd][:synced][:stop_file]}"
     content "This file is for drbd and chef to signify drbd is synchronized"
     action :nothing
 end
@@ -74,30 +74,3 @@ extended_drbd_immutable_file "#{node[:drbd][:stop_file]}" do
     action :nothing
 end
 
-file "/etc/drbd_initialized_file" do
-    action :nothing
-    notifies :run, "execute[change permissions on /etc/drbd_initialized_file]", :immediately
-end
-execute "change permissions on /etc/drbd_initialized_file" do
-    command "chattr +i /etc/drbd_initialized_file"
-    action :nothing
-end
-file "/etc/drbd_synced_stop_file" do
-    mode 0777
-    action :nothing
-    notifies :run, "execute[change permissions on /etc/drbd_synced_stop_file]", :immediately
-end
-execute "change permissions on /etc/drbd_synced_stop_file" do
-    command "chattr +i /etc/drbd_synced_stop_file"
-    action :nothing
-end
-file "#{node[:drbd][:stop_file]}" do
-    mode 0777
-    action :nothing
-    notifies :run, "execute[change permissions on #{node[:drbd][:stop_file]}]", :immediately
-end
-
-execute "change permissions on #{node[:drbd][:stop_file]}" do
-    command "chattr +i #{node[:drbd][:stop_file]}"
-    action :nothing
-end

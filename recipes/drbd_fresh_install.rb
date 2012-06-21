@@ -46,13 +46,12 @@ execute "drbdadm create-md all" do
     only_if {!system("#{stop_file_exists_command}") and system("drbd-overview | grep -q \"drbd not loaded\"")}
     action :run
     notifies :restart, resources(:service => 'drbd'), :immediately
-    #notifies :create, "extended_drbd_immutable_file[/etc/drbd_initialized_file]", :immediately
-    notifies :create, "file[/etc/drbd_initialized_file]", :immediately
+    notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:initialized][:stop_file]}]", :immediately
 end
 
-wait_til "drbd_initilized on other server" do
-    command "ssh -q #{remote_ip} [ -f /etc/drbd_initialized_file ] "
-    message "Wait for drbd to be initizlized on #{remote_ip}"
+wait_til "drbd_initialized on other server" do
+    command "ssh -q #{remote_ip} [ -f #{node[:drbd][:initialized][:stop_file]} ] "
+    message "Wait for drbd to be initialized on #{remote_ip}"
     wait_interval 5
     not_if "#{stop_file_exists_command}"
 end
@@ -81,8 +80,7 @@ wait_til_not "wait until drbd is in a constant state" do
     wait_interval 5
     not_if "#{stop_file_exists_command}"
     notifies :run, "execute[adjust drbd]", :immediately
-    #notifies :create, "extended_drbd_immutable_file[/etc/drbd_synced_stop_file]", :immediately
-    notifies :create, "file[/etc/drbd_synced_stop_file]", :immediately
+    notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:synced][:stop_file]}]", :immediately
 end
 
 ruby_block "check configuration on both servers" do
@@ -130,7 +128,6 @@ ruby_block "check configuration on both servers" do
         end
     end
     not_if "#{stop_file_exists_command}"
-    #notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:stop_file]}]"
-    notifies :create, "file[#{node[:drbd][:stop_file]}]", :immediately
+    notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:stop_file]}]", :immediately
 end
 
