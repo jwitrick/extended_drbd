@@ -30,14 +30,34 @@ node[:drbd][:packages].each do |p|
     end
 end
 
+unless defined? node[:my_expected_ip] do
+    host = search(:node, "fqdn:#{node[:fqdn]}").first
+    node.set[:my_expected_ip] = host["ipaddress"]
+end
+
+unless defined? node[:server_short_hostname] do
+    host = search(:node, "fqdn:#{node[:fqdn]}").first
+    node.set[:server_short_hostname] = host["hostname"]
+end
+
+unless defined? node[:server_partner_ip] do
+    host = search(:node, "fqdn:#{node[:drbd][:remote_host]}").first
+    node.set[:server_partner_ip] = host["ipaddress"]
+end
+
+unless defined? node[:server_partner_short_hostname] do
+    host = search(:node, "fqdn:#{node[:drbd][:remote_host]}").first
+    node.set[:server_partner_short_hostname] = host["hostname"]
+end
+
 template node['drbd']['config_file'] do
     source "drbd.conf.erb"
     variables(
         :resource => node[:drbd][:resource],
-        :primary_ip => node[:drbd][:primary][:ip],
-        :primary_short_hostname => node[:drbd][:primary][:short_hostname],
-        :secondary_ip => node[:drbd][:secondary][:ip],
-        :secondary_short_hostname => node[:drbd][:secondary][:short_hostname]
+        :my_ip => node[:my_expected_ip],
+        :my_short_hostname => node[:server_short_hostname],
+        :partner_ip => node[:server_partner_ip],
+        :partner_short_hostname => node[:server_partner_short_hostname]
     )
     owner "root"
     group "root"
