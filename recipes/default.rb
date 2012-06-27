@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: mailserver_provisioning
-# Recipe:: drbd
+# Cookbook Name:: extended_drbd
+# Recipe:: default
 #
 # Copyright (C) 2012 Justin Witrick
 #

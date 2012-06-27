@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: mailserver_provisioning
+# Cookbook Name:: extended_drbd
 # Recipe:: drbd_fresh_install
 # Copyright (C) 2012 Justin Witrick
 #
@@ -25,10 +25,6 @@ resource = node[:drbd][:resource]
 my_ip = node[:my_expected_ip].nil? ? node[:ipaddress] : node[:my_expected_ip]
 
 remote_ip = node[:server_partner_ip]
-#if remote_ip.nil?
-#    remote = search(:node, "name:#{node['server_partner_hostname']}")[0]
-#    remote_ip = remote.ipaddress
-#end
 
 ruby_block "check if other server is primary" do
     block do
@@ -38,7 +34,7 @@ ruby_block "check if other server is primary" do
             Chef::Log.info("This is a DRBD master")
         end
     end
-    only_if {"#{node[:server_letter]}".eql? "#{node[:drbd][:primary][:designation]}" }
+    only_if {"#{node[:drbd][:primary]}".eql? "#{node[:fqdn]}" }
 end
 
 execute "drbdadm create-md all" do

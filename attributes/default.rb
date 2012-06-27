@@ -16,11 +16,4 @@ default[:drbd][:stop_file] = "/etc/drbd_stop_file"
 default[:drbd][:synced][:stop_file] = "/etc/drbd_synced_stop_file"
 default[:drbd][:initialized][:stop_file] = "/etc/drbd_initialized_stop_file"
 
-#default[:my_expected_ip] = nil
-#default[:server_partner_ip] = nil
-#default[:server_partner_hostname] = nil
-
-default[:drbd][:primary][:designation] = 'a'
-default[:drbd][:secondary][:designation] = 'b'
-
-default[:server_letter] = nil
+default[:drbd][:primary] = nil
