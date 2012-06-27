@@ -20,14 +20,15 @@ Prerequisites:
 
 - The disk location (node[:drbd][:disk]) must exist.
 
-- The servers must be able to ssh to the other server.
+- The servers MUST be able to ssh to the other server.
 
 Note: In order for this work properly both servers need to be running chef
 at the same time,
 
-There are 2 ways to specify a drbd primary. 1) set an override
-attribute on the node directly "drbd":{"master"=true} 2) set
-an attribute "server_letter" as 'a'
+You will need to have the following attribute values specified:
+
+node[:drbd][:primary] and node[:drbd][:remote_host]
+
 
 Once one server has been specified as drbd master you can add the recipe
 "drbd::drbd_fresh_install" to the run_list of both servers.
@@ -58,8 +59,6 @@ Here is how I use it:
 = ATTRIBUTES:
 default[:drbd][:packages] = ["kmod-drbd83", "drbd83"]
 
-default[:drbd][:remote_host] = nil
-
 default[:drbd][:disk] = "/dev/local/data"
 
 default[:drbd][:mount] = "/data"
@@ -74,32 +73,19 @@ default[:drbd][:port] = 7789
 
 default[:drbd][:configured] = false
 
-default[:drbd][:stop_file] = "/etc/drbd_stop_file"
-
 default[:drbd][:syncrate] = "36M"
 
 default[:drbd][:resource] = "data"
 
-default[:drbd][:primary][:short_hostname] = "<result of command 'hostname'>"
+default[:drbd][:stop_file] = "/etc/drbd_stop_file"
 
-default[:drbd][:primary][:ip] = ""
+default[:drbd][:synced][:stop_file] = "/etc/drbd_synced_stop_file"
 
-default[:drbd][:secondary][:short_hostname] = "<result of command 'hostname'>"
+default[:drbd][:initialized][:stop_file] = "/etc/drbd_initialized_stop_file"
 
-default[:drbd][:secondary][:ip] = ""
+default[:drbd][:primary] = nil
 
-default[:my_expected_ip] = ''
-
-default[:server_partner_ip] =''
-
-default[:server_partner_hostname] = ''
-
-default[:drbd][:primary][:designation] = 'a'
-
-default[:drbd][:secondary][:designation] = 'b'
-
-default[:server_letter] = ""
-
+default[:drbd][:remote_host] = nil
 
 = License
 DRBD Chef Recipe
