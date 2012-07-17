@@ -3,7 +3,7 @@
 # Recipe:: drbd_fresh_install
 # Copyright (C) 2012 Justin Witrick
 #
-# This program is free software; you can redistribute it and/or
+# This program is free software; you can reistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
@@ -39,7 +39,7 @@ end
 
 execute "drbdadm create-md all" do
     command "echo 'Running create-md' ; yes yes |drbdadm create-md all"
-    only_if {!system("#{stop_file_exists_command}") and system("drbd-overview | grep -q \"drbd not loaded\"")}
+    not_if {::File.exists?("#{node['drbd']['stop_file']}")}
     action :run
     notifies :restart, resources(:service => 'drbd'), :immediately
     notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:initialized][:stop_file]}]", :immediately
@@ -49,7 +49,7 @@ wait_til "drbd_initialized on other server" do
     command "ssh -q #{remote_ip} [ -f #{node[:drbd][:initialized][:stop_file]} ] "
     message "Wait for drbd to be initialized on #{remote_ip}"
     wait_interval 5
-    not_if "#{stop_file_exists_command}"
+    not_if {::File.exists?("#{node['drbd']['stop_file']}")}
 end
 
 bash "setup DRBD on master" do

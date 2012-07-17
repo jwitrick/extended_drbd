@@ -1,7 +1,9 @@
 default[:drbd][:packages] = ["kmod-drbd83", "drbd83"]
 
+set_unless['lvm']['vg_name'] = 'local'
+
 default[:drbd][:remote_host] = nil
-default[:drbd][:disk] = "/dev/local/data"
+default[:drbd][:disk] = "/dev/#{node['lvm']['vg_name']}/data"
 default[:drbd][:mount] = "/data"
 default[:drbd][:fs_type] = "ext3"
 default[:drbd][:dev] = "/dev/drbd0"
