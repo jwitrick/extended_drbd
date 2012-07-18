@@ -18,4 +18,4 @@ default[:drbd][:stop_file] = "/etc/drbd_stop_file"
 default[:drbd][:synced][:stop_file] = "/etc/drbd_synced_stop_file"
 default[:drbd][:initialized][:stop_file] = "/etc/drbd_initialized_stop_file"
 
-default[:drbd][:primary] = nil
+default[:drbd][:primary][:fqdn] = nil

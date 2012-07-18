@@ -27,7 +27,7 @@ at the same time,
 
 You will need to have the following attribute values specified:
 
-node[:drbd][:primary] and node[:drbd][:remote_host]
+node[:drbd][:primary][:fqdn] and node[:drbd][:remote_host]
 
 
 Once one server has been specified as drbd master you can add the recipe
@@ -83,7 +83,7 @@ default[:drbd][:synced][:stop_file] = "/etc/drbd_synced_stop_file"
 
 default[:drbd][:initialized][:stop_file] = "/etc/drbd_initialized_stop_file"
 
-default[:drbd][:primary] = nil
+default[:drbd][:primary][:fqdn] = nil
 
 default[:drbd][:remote_host] = nil
 

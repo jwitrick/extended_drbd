@@ -34,7 +34,7 @@ ruby_block "check if other server is primary" do
             Chef::Log.info("This is a DRBD master")
         end
     end
-    only_if {"#{node[:drbd][:primary]}".eql? "#{node[:fqdn]}" }
+    only_if {"#{node[:drbd][:primary][:fqdn]}".eql? "#{node[:fqdn]}" }
 end
 
 execute "drbdadm create-md all" do
