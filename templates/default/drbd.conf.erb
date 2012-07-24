@@ -12,13 +12,13 @@ common {
 resource <%= @resource %> {
   on <%= @my_short_hostname %> {
     device    <%= node['drbd']['dev'] %>;
-    disk      <%= node['drbd']['disk'] %>;
+    disk      <%= node['drbd']['disk']['start']%><%=node['lvm']['vg_name']%><%=node['drbd']['mount'] %>;
     address   <%=@my_ip%>:<%= node['drbd']['port'] %>;
     meta-disk internal;
   }
   on <%= @partner_short_hostname %> {
     device    <%= node['drbd']['dev'] %>;
-    disk      <%= node['drbd']['disk'] %>;
+    disk      <%= node['drbd']['disk']['start']%><%=node['lvm']['vg_name']%><%=node['drbd']['mount'] %>;
     address   <%= @partner_ip %>:<%= node['drbd']['port'] %>;
     meta-disk internal;
   }
