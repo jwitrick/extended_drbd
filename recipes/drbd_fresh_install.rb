@@ -73,7 +73,7 @@ end
 wait_til_not "wait until drbd is in a constant state" do
     command "grep -q ds:.*Inconsistent /proc/drbd"
     message "Wait until drbd is not in an inconsistent state"
-    wait_interval 5
+    wait_interval 60
     not_if "#{stop_file_exists_command}"
     notifies :run, "execute[adjust drbd]", :immediately
     notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:synced][:stop_file]}]", :immediately
