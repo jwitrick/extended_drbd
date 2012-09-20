@@ -58,7 +58,7 @@ bash "setup DRBD on master" do
 drbdadm -- --overwrite-data-of-peer primary #{resource}
 echo 'Changing sync rate to 110M'
 drbdsetup #{node[:drbd][:dev]} syncer -r 110M
-mkfs.ext3 -m 1 -L #{resource} -T news #{node[:drbd][:dev]}
+mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}
 tune2fs -c0 -i0 #{node[:drbd][:dev]}
  EOH
  only_if {node[:drbd][:master]} and not_if "#{stop_file_exists_command}"

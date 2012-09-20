@@ -30,23 +30,23 @@ node[:drbd][:packages].each do |p|
     end
 end
 
-unless defined? node[:my_expected_ip]
-    host = search(:node, "fqdn:#{node[:fqdn]}").first
+if not defined? node[:my_expected_ip]
+    host = search(:node, %Q{fqdn:"#{node[:fqdn]}"}).first
     node.set[:my_expected_ip] = host["ipaddress"]
 end
 
-unless defined? node[:server_short_hostname]
-    host = search(:node, "fqdn:#{node[:fqdn]}").first
+if not defined? node[:server_short_hostname]
+    host = search(:node, %Q{fqdn:"#{node[:fqdn]}"}).first
     node.set[:server_short_hostname] = host["hostname"]
 end
 
-unless defined? node[:server_partner_ip]
-    host = search(:node, "fqdn:#{node[:drbd][:remote_host]}").first
+if not defined? node[:server_partner_ip]
+    host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
     node.set[:server_partner_ip] = host["ipaddress"]
 end
 
-unless defined? node[:server_partner_short_hostname]
-    host = search(:node, "fqdn:#{node[:drbd][:remote_host]}").first
+if not defined? node[:server_partner_short_hostname]
+    host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
     node.set[:server_partner_short_hostname] = host["hostname"]
 end
 
