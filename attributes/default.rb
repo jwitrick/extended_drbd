@@ -17,3 +17,13 @@ default[:drbd][:synced][:stop_file] = "/etc/drbd_synced_stop_file"
 default[:drbd][:initialized][:stop_file] = "/etc/drbd_initialized_stop_file"
 
 default[:drbd][:primary][:fqdn] = nil
+
+default['drbd']['protocol'] = 'C'
+default['drbd']['disk']['on_io_error_action'] = 'detach'
+default['drbd']['disk']['disk-flushes'] = true
+default['drbd']['disk']['md-flushes'] = true
+
+default['drbd']['net']['enabled'] = false
+default['drbd']['net']['sndbuf-size'] = '1M'
+default['drbd']['net']['max-buffers'] = 8000
+default['drbd']['net']['max-epoch-size'] = 8000

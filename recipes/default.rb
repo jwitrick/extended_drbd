@@ -22,6 +22,15 @@
 
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 inplace = File.exists?("#{node['drbd']['config_file']}")
+
+if node['drbd']['fs_type'] == 'xfs'
+    %w{ xfsprogs }.each do |pkg|
+        package pkg do
+            action :install
+        end
+    end
+end
+
 node[:drbd][:packages].each do |p|
     yum_package p do
         version node[:drbd]['#{p}'][:version] if defined? node[:drbd]['#{p}'][:version]
