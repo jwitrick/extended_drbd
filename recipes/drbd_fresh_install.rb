@@ -23,12 +23,13 @@ include_recipe 'extended_drbd'
 stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 resource = node[:drbd][:resource]
 my_ip = node[:my_expected_ip].nil? ? node[:ipaddress] : node[:my_expected_ip]
+node['drbd']['ssh_command'] = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
 remote_ip = node[:server_partner_ip]
 
 ruby_block "check if other server is primary" do
     block do
-        partner_primary = system("ssh #{remote_ip} drbdadm role data | grep -q 'Primary/'")
+        partner_primary = system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role data | grep -q 'Primary/'")
         if not partner_primary
             node[:drbd][:master] = true
             Chef::Log.info("This is a DRBD master")
@@ -46,23 +47,38 @@ execute "drbdadm create-md all" do
 end
 
 wait_til "drbd_initialized on other server" do
-    command "ssh -q #{remote_ip} [ -f #{node[:drbd][:initialized][:stop_file]} ] "
+    command "#{node['drbd']['ssh_command']} -q #{remote_ip} [ -f #{node[:drbd][:initialized][:stop_file]} ] "
     message "Wait for drbd to be initialized on #{remote_ip}"
     wait_interval 5
     not_if {::File.exists?("#{node['drbd']['stop_file']}")}
 end
 
-bash "setup DRBD on master" do
- user "root"
- code <<-EOH
+  bash "setup drbd on master" do
+         user "root"
+         code <<-EOH
 drbdadm -- --overwrite-data-of-peer primary #{resource}
 echo 'Changing sync rate to 110M'
 drbdsetup #{node[:drbd][:dev]} syncer -r 110M
+         EOH
+         only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
+  end
+
+if node['drbd']['fs_type'] == "xfs"
+    execute "setup xfs filesystem" do
+        command "mkfs.#{node['drbd']['fs_type']} -L #{resource} -f #{node[:drbd][:dev]}"
+        only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
+    end
+  else
+      bash "setup ext file system" do
+         user "root"
+         code <<-EOH
 mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}
 tune2fs -c0 -i0 #{node[:drbd][:dev]}
- EOH
- only_if {node[:drbd][:master]} and not_if "#{stop_file_exists_command}"
-end
+         EOH
+         only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
+      end
+
+  end
 
 execute "change sync rate on secondary server only if this is an inplace upgrade" do
     command "drbdsetup #{node[:drbd][:dev]} syncer -r 110M"
@@ -87,7 +103,7 @@ ruby_block "check configuration on both servers" do
                 Chef::Log.info("The drbd master role was not correctly configured.")
                 drbd_correct = false
             end
-            if not system("ssh #{remote_ip} drbdadm role #{resource} | grep -q \"Secondary/Primary\"")
+            if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role #{resource} | grep -q \"Secondary/Primary\"")
                 Chef::Log.info("The drbd secondary role was not correctly configured.")
                 drbd_correct = false
             end
@@ -96,7 +112,7 @@ ruby_block "check configuration on both servers" do
                 Chef::Log.info("The drbd master role was not correctly configured.")
                 drbd_correct = false
             end
-            if not system("ssh #{remote_ip} drbdadm role #{resource} | grep -q \"Primary/Secondary\"")
+            if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role #{resource} | grep -q \"Primary/Secondary\"")
                 Chef::Log.info("The drbd secondary role was not correctly configured.")
                 drbd_correct = false
             end
@@ -110,11 +126,11 @@ ruby_block "check configuration on both servers" do
             Chef::Log.info("The drbd master cstate was not correctly configured.")
             drbd_correct = false
         end
-        if not system("ssh #{remote_ip} drbdadm dstate #{resource} | grep -q \"UpToDate/UpToDate\"")
+        if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm dstate #{resource} | grep -q \"UpToDate/UpToDate\"")
             Chef::Log.info("The drbd secondary dstate was not correctly configured.")
             drbd_correct = false
         end
-        if not system("ssh #{remote_ip} drbdadm cstate #{resource} | grep -q \"Connected\"")
+        if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm cstate #{resource} | grep -q \"Connected\"")
             Chef::Log.info("The drbd secondary cstate was not correctly configured.")
             drbd_correct = false
         end

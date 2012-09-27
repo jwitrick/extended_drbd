@@ -38,11 +38,13 @@ node[:drbd][:packages].each do |p|
         action :install
     end
 end
-
-if not defined? node[:my_expected_ip]
-    host = search(:node, %Q{fqdn:"#{node[:fqdn]}"}).first
-    node.set[:my_expected_ip] = host["ipaddress"]
-end
+tmp = defined?(node['my_expected_ip'])
+Chef::Log.info("my_expected_ip is #{tmp}")
+node['my_expected_ip'] ||= node['ipaddress']
+#if not defined? node[:my_expected_ip]
+#    Chef::Log.info("========== SETTING my_expected_ip to ipaddress =========")
+#    node.set[:my_expected_ip] = node["ipaddress"]
+#end
 
 if not defined? node[:server_short_hostname]
     host = search(:node, %Q{fqdn:"#{node[:fqdn]}"}).first
