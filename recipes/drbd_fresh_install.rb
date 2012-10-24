@@ -66,19 +66,22 @@ drbdsetup #{node[:drbd][:dev]} syncer -r 110M
 if node['drbd']['fs_type'] == "xfs"
     execute "setup xfs filesystem" do
         command "mkfs.#{node['drbd']['fs_type']} -L #{resource} -f #{node[:drbd][:dev]}"
+        timeout node['drbd']['command_timeout']
         only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
     end
-  else
-      bash "setup ext file system" do
-         user "root"
-         code <<-EOH
-mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}
-tune2fs -c0 -i0 #{node[:drbd][:dev]}
-         EOH
-         only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
-      end
+else
+    execute "setup ext file system" do
+        command "mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}"
+        timeout node['drbd']['command_timeout']
+        only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
+    end
 
-  end
+    execute "configure fs" do
+        command "tune2fs -c0 -i0 #{node[:drbd][:dev]}"
+        timeout node['drbd']['command_timeout']
+        only_if {node['drbd']['master']} and not_if "#{stop_file_exists_command}"
+    end
+end
 
 execute "change sync rate on secondary server only if this is an inplace upgrade" do
     command "drbdsetup #{node[:drbd][:dev]} syncer -r 110M"

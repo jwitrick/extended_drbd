@@ -18,6 +18,8 @@ default[:drbd][:initialized][:stop_file] = "/etc/drbd_initialized_stop_file"
 
 default[:drbd][:primary][:fqdn] = nil
 
+default['drbd']['command_timeout'] = 36000
+
 default['drbd']['protocol'] = 'C'
 default['drbd']['disk']['on_io_error_action'] = 'detach'
 default['drbd']['disk']['disk-flushes'] = true
