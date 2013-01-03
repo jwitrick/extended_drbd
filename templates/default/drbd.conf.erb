@@ -19,13 +19,13 @@ common {
   <% end -%>
   disk {
   on-io-error <%=node['drbd']['disk']['on_io_error_action']%>;
-  <% if not node['drbd']['disk']['disk-flushes'] -%>
+  <% if node['drbd']['disk']['disk-flushes'] -%>
   no-disk-flushes;
   <% end -%>
-  <% if not node['drbd']['disk']['md-flushes'] -%>
+  <% if node['drbd']['disk']['md-flushes'] -%>
   no-md-flushes;
   <% end -%>
-  <% if not node['drbd']['disk']['no-disk-barrier'] -%>
+  <% if node['drbd']['disk']['no-disk-barrier'] -%>
   no-disk-barrier;
   <% end -%>
   }
