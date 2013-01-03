@@ -29,10 +29,13 @@ remote_ip = node[:server_partner_ip]
 
 ruby_block "check if other server is primary" do
     block do
-        partner_primary = system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role data | grep -q 'Primary/'")
+        partner_primary = system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role #{node['drbd']['resource']} | grep -q 'Primary/'")
         if not partner_primary
             node[:drbd][:master] = true
             Chef::Log.info("This is a DRBD master")
+            unless Chef::Config[:solo]
+                node.save
+            end
         end
     end
     only_if {"#{node[:drbd][:primary][:fqdn]}".eql? "#{node[:fqdn]}" }

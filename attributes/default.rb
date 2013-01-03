@@ -22,8 +22,9 @@ default['drbd']['command_timeout'] = 36000
 
 default['drbd']['protocol'] = 'C'
 default['drbd']['disk']['on_io_error_action'] = 'detach'
-default['drbd']['disk']['disk-flushes'] = true
-default['drbd']['disk']['md-flushes'] = true
+default['drbd']['disk']['disk-flushes'] = false
+default['drbd']['disk']['md-flushes'] = false
+default['drbd']['disk']['no-disk-barrier'] = false
 
 default['drbd']['net']['enabled'] = false
 default['drbd']['net']['sndbuf-size'] = '1M'
