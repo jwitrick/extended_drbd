@@ -36,7 +36,7 @@ ruby_block "check if other server is primary" do
       node.save
     end
   end
-  only_if { node[:drbd][:primary][:fqdn]}eql? node[:fqdn] }
+  only_if { node[:drbd][:primary][:fqdn].eql? node[:fqdn] }
 end
 
 execute "drbdadm create-md all" do
@@ -61,27 +61,27 @@ drbdadm -- --overwrite-data-of-peer primary #{resource}
 echo 'Changing sync rate to 110M'
 drbdsetup #{node[:drbd][:dev]} syncer -r 110M
   EOH
-  only_if { system(drbd_primary_check) and not ::File.exists?(node['drbd']['stop_file']) }
+  only_if { (node['drbd']['master'] == true or system(drbd_primary_check)) and (not ::File.exists?(node['drbd']['stop_file'])) }
+  notifies :run, "execute[setup xfs filesystem]", :immediately if node['drbd']['fs_type'] == "xfs"
+  notifies :run, "execute[setup ext file system]", :immediately if node['drbd']['fs_type'] != "xfs"
 end
 
-if node['drbd']['fs_type'] == "xfs"
-  execute "setup xfs filesystem" do
-    command "mkfs.#{node['drbd']['fs_type']} -L #{resource} -f #{node[:drbd][:dev]}"
-    timeout node['drbd']['command_timeout']
-    only_if { system(drbd_primary_check) and not ::File.exists?(node['drbd']['stop_file']) }
-  end
-else
-  execute "setup ext file system" do
-    command "mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}"
-    timeout node['drbd']['command_timeout']
-    only_if { system(drbd_primary_check) and not ::File.exists?(node['drbd']['stop_file']) }
-  end
+execute "setup xfs filesystem" do
+  command "mkfs.#{node['drbd']['fs_type']} -L #{resource} -f #{node[:drbd][:dev]}"
+  timeout node['drbd']['command_timeout']
+  action :nothing
+end
+execute "setup ext file system" do
+  command "mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}"
+  timeout node['drbd']['command_timeout']
+  notifies :run, "execute[configure fs]", :immediately
+  action :nothing
+end
 
-  execute "configure fs" do
-    command "tune2fs -c0 -i0 #{node[:drbd][:dev]}"
-    timeout node['drbd']['command_timeout']
-    only_if { system(drbd_primary_check) and not ::File.exists?(node['drbd']['stop_file']) }
-  end
+execute "configure fs" do
+  command "tune2fs -c0 -i0 #{node[:drbd][:dev]}"
+  timeout node['drbd']['command_timeout']
+  action :nothing
 end
 
 execute "change sync rate on secondary server only if this is an inplace upgrade" do
