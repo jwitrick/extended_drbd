@@ -19,12 +19,12 @@
 # USA.
 #
 
-include_recipe 'extended_drbd'
+include_recipe "#{@cookbook_name}"
 drbd_primary_check          = "cat /proc/drbd |grep -q 'Primary/'"
 drbd_secondary_check        = "cat /proc/drbd |grep -q 'Secondary/'"
 resource                    = node[:drbd][:resource]
 my_ip                       = node[:my_expected_ip].nil? ? node[:ipaddress] : node[:my_expected_ip]
-node['drbd']['ssh_command'] = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+node.set['drbd']['ssh_command'] = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
 remote_ip = node[:server_partner_ip]
 

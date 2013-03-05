@@ -24,19 +24,19 @@ stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
 inplace = File.exists?("#{node['drbd']['config_file']}")
 
 if node['drbd']['fs_type'] == 'xfs'
-    %w{ xfsprogs }.each do |pkg|
-        package pkg do
-            action :install
-        end
+  %w{ xfsprogs }.each do |pkg|
+    package pkg do
+      action :install
     end
+  end
 end
 
 node[:drbd][:packages].each do |p|
-    yum_package p do
-        version node[:drbd]['#{p}'][:version] if defined? node[:drbd]['#{p}'][:version]
-        allow_downgrade true
-        action :install
-    end
+  yum_package p do
+    version node[:drbd][p][:version] if defined? node[:drbd][p][:version]
+    allow_downgrade true
+    action :install
+  end
 end
 tmp = defined?(node['my_expected_ip'])
 Chef::Log.info("my_expected_ip is #{tmp}")
@@ -61,9 +61,9 @@ if not defined? node[:server_partner_short_hostname]
     node.set[:server_partner_short_hostname] = host["hostname"]
 end
 
+Log "Creating template with disk resource #{node['drbd']['disk']}"
 template node['drbd']['config_file'] do
     source "drbd.conf.erb"
-    Chef::Log.info("Creating template with disk resource #{node['drbd']['disk']}")
     variables(
         :resource => node[:drbd][:resource],
         :my_ip => node[:my_expected_ip],

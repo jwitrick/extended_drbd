@@ -1,4 +1,9 @@
-default[:drbd][:packages] = ["kmod-drbd83", "drbd83"]
+
+if node['kernel']['release'].include?("xen")
+  default[:drbd][:packages] = ["kmod-drbd83", "drbd83", "kmod-drbd83-xen"]
+else
+  default[:drbd][:packages] = ["kmod-drbd83", "drbd83"]
+end
 
 default[:drbd][:remote_host] = nil
 default[:drbd][:disk][:start] = "/dev/" #{node['lvm']['vg_name']}/data"

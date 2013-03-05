@@ -19,12 +19,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 #
-include_recipe 'extended_drbd'
-stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
+
+include_recipe "#{@cookbook_name}"
 
 execute "create stop files" do
     command "echo 'Creating stop files'"
-    not_if "#{stop_file_exists_command}"
+    not_if {::File.exists?(node['drbd']['stop_file'])}
     notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:initialized][:stop_file]}]", :immediately
     notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:stop_file]}]", :immediately
 end
