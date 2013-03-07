@@ -28,17 +28,6 @@ node.set['drbd']['ssh_command'] = "ssh -o UserKnownHostsFile=/dev/null -o Strict
 
 remote_ip = node[:server_partner_ip]
 
-ruby_block "check if other server is primary" do
-  block do
-    node[:drbd][:master] = true
-    Chef::Log.info("This is a DRBD master")
-    unless Chef::Config[:solo]
-      node.save
-    end
-  end
-  only_if { node[:drbd][:primary][:fqdn].eql? node[:fqdn] }
-end
-
 execute "drbdadm create-md all" do
   command "echo 'Running create-md' ; yes yes |drbdadm create-md all"
   not_if {::File.exists?(node['drbd']['stop_file'])}
@@ -52,6 +41,24 @@ wait_til "drbd_initialized on other server" do
     message "Wait for drbd to be initialized on #{remote_ip}"
     wait_interval 5
     not_if {::File.exists?(node['drbd']['stop_file'])}
+end
+
+execute "modprobe drbd"
+
+ruby_block "check if other server is primary" do
+  block do
+    drbd_check = Chef::ShellOut.new("drbdadm role all").run_command.stdout
+    if not drbd_check.include?("Secondary/Primary")
+      node.set[:drbd][:master] = true
+      Chef::Log.info("This is a DRBD master")
+      unless Chef::Config[:solo]
+        node.save
+      end
+    else
+      node.set['drbd']['master'] = false
+    end
+  end
+  only_if { node[:drbd][:primary][:fqdn].eql? node[:fqdn] }
 end
 
 bash "setup drbd on master" do
