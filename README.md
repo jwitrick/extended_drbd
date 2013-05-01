@@ -58,7 +58,7 @@ Here is how I use it:
 
 Attributes:
 ===========
- * `default['drbd']['packages']` = ["kmod-drbd83", "drbd83"]
+ * `default['drbd']['packages'] = ["kmod-drbd83", "drbd83"]`
  * `default['drbd']['disk'] = "/dev/local/data"`
  * `default['drbd']['mount'] = "/data"`
  * `default['drbd']['fs_type'] = "ext3"`
