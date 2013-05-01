@@ -4,24 +4,20 @@
 #
 # Copyright (C) 2012 Justin Witrick
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-# USA.
-#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
 
-stop_file_exists_command = " [ -f #{node[:drbd][:stop_file]} ] "
-inplace = File.exists?("#{node['drbd']['config_file']}")
+inplace = File.exists?(node['drbd']['config_file'])
 
 if node['drbd']['fs_type'] == 'xfs'
   %w{ xfsprogs }.each do |pkg|
@@ -31,78 +27,87 @@ if node['drbd']['fs_type'] == 'xfs'
   end
 end
 
-node[:drbd][:packages].each do |p|
+node['drbd']['packages'].each do |p|
   yum_package p do
-    version node[:drbd][p][:version] if defined? node[:drbd][p][:version]
+    version node['drbd'][p]['version'] if defined? node['drbd'][p]['version']
     allow_downgrade true
     action :install
   end
 end
-tmp = defined?(node['my_expected_ip'])
-Chef::Log.info("my_expected_ip is #{tmp}")
+
 node['my_expected_ip'] ||= node['ipaddress']
-#if not defined? node[:my_expected_ip]
-#    Chef::Log.info("========== SETTING my_expected_ip to ipaddress =========")
-#    node.set[:my_expected_ip] = node["ipaddress"]
-#end
 
-if not defined? node[:server_short_hostname]
-    host = search(:node, %Q{fqdn:"#{node[:fqdn]}"}).first
-    node.set[:server_short_hostname] = host["hostname"]
+if not defined? node['server_short_hostname']
+  node.normal = node['fqdn']
 end
 
-if not defined? node[:server_partner_ip]
+if not defined? node['server_partner_ip']
+  if Chef::Config['solo']
+    Log "You are running as solo, search does not work" do
+      level :warn
+    end
+    node.normal['server_partner_ip'] = nil
+  else
     host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
-    node.set[:server_partner_ip] = host["ipaddress"]
+    node.normal['server_partner_ip'] = host["ipaddress"]
+  end
 end
 
-if not defined? node[:server_partner_short_hostname]
+if not defined? node['server_partner_short_hostname']
+  if Chef::Config['solo']
+    Log "You are running as solo, search does not work" do
+      level :warn
+    end
+    node.normal['server_partner_short_hostname'] = nil
+  else
     host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
-    node.set[:server_partner_short_hostname] = host["hostname"]
+    node.normal['server_partner_short_hostname'] = host["hostname"]
+  end
 end
 
 Log "Creating template with disk resource #{node['drbd']['disk']}"
 template node['drbd']['config_file'] do
-    source "drbd.conf.erb"
-    variables(
-        :resource => node[:drbd][:resource],
-        :my_ip => node[:my_expected_ip],
-        :my_short_hostname => node[:server_short_hostname],
-        :partner_ip => node[:server_partner_ip],
-        :partner_short_hostname => node[:server_partner_short_hostname]
-    )
-    owner "root"
-    group "root"
-    action :create
-    notifies :run, "execute[adjust drbd]", :immediately
+  source "drbd.conf.erb"
+  variables(
+    :resource => node['drbd']['resource'],
+    :my_ip => node['my_expected_ip'],
+    :my_short_hostname => node['server_short_hostname'],
+    :partner_ip => node['server_partner_ip'],
+    :partner_short_hostname => node['server_partner_short_hostname']
+  )
+  owner "root"
+  group "root"
+  action :create
+  notifies :run, "execute[adjust drbd]", :immediately
 end
 
 service 'drbd' do
-    supports :restart =>true, :status =>true
-    action :nothing
+  supports :restart =>true, :status =>true
+  action :nothing
 end
 
 execute "adjust drbd" do
-    command "drbdadm adjust all"
-    action :nothing
-    only_if {inplace}
+  command "drbdadm adjust all"
+  action :nothing
+  only_if { inplace }
 end
 
-extended_drbd_immutable_file "#{node[:drbd][:initialized][:stop_file]}" do
-    file_name "#{node[:drbd][:initialized][:stop_file]}"
-    content "This file is for drbd and chef to signify drbd is initialized"
-    action :nothing
+extended_drbd_immutable_file node['drbd']['initialized']['stop_file'] do
+  file_name node['drbd']['initialized']['stop_file']
+  content "This file is for drbd and chef to signify drbd is initialized"
+  action :nothing
 end
 
-extended_drbd_immutable_file "#{node[:drbd][:synced][:stop_file]}" do
-    file_name "#{node[:drbd][:synced][:stop_file]}"
-    content "This file is for drbd and chef to signify drbd is synchronized"
-    action :nothing
+extended_drbd_immutable_file node['drbd']['synced']['stop_file'] do
+  file_name node['drbd']['synced']['stop_file']
+  content "This file is for drbd and chef to signify drbd is synchronized"
+  action :nothing
 end
 
-extended_drbd_immutable_file "#{node[:drbd][:stop_file]}" do
-    file_name "#{node[:drbd][:stop_file]}"
-    content "This file is for drbd and chef to signify drbd is fully configured"
-    action :nothing
+extended_drbd_immutable_file node['drbd']['stop_file'] do
+  file_name node['drbd']['stop_file']
+  content "This file is for drbd and chef to signify drbd is fully configured"
+  action :nothing
 end
 
+# vim: ai et ts=2 sts=2 sw=2 ft=ruby

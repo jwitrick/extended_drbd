@@ -6,15 +6,15 @@ global {
 common {
   <% if node['drbd']['net']['enabled'] -%>
   net{
-    <% if node['drbd']['net']['sndbuf-size'] -%>
-    sndbuf-size <%=node['drbd']['net']['sndbuf-size']%>;
-    <% end -%>
-    <% if node['drbd']['net']['max-buffers'] -%>
-    max-buffers <%=node['drbd']['net']['max-buffers']%>;
-    <% end -%>
-    <% if node['drbd']['net']['max-epoch-size'] -%>
-    max-epoch-size <%=node['drbd']['net']['max-epoch-size']%>;
-    <% end -%>
+  <% if node['drbd']['net']['sndbuf-size'] -%>
+  sndbuf-size <%=node['drbd']['net']['sndbuf-size']%>;
+  <% end -%>
+  <% if node['drbd']['net']['max-buffers'] -%>
+  max-buffers <%=node['drbd']['net']['max-buffers']%>;
+  <% end -%>
+  <% if node['drbd']['net']['max-epoch-size'] -%>
+  max-epoch-size <%=node['drbd']['net']['max-epoch-size']%>;
+  <% end -%>
   }
   <% end -%>
   disk {
@@ -28,8 +28,8 @@ common {
   <% if node['drbd']['disk']['no-disk-barrier'] == true -%>
   no-disk-barrier;
   <% end -%>
-  }
-  protocol <%=node['drbd']['protocol']%>;
+}
+protocol <%=node['drbd']['protocol']%>;
 }
 resource <%= @resource %> {
   on <%= @my_short_hostname %> {
@@ -48,4 +48,3 @@ resource <%= @resource %> {
      rate <%= node['drbd']['syncrate']%>;
   }
 }
-

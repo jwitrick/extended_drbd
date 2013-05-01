@@ -1,7 +1,6 @@
 #
-# Cookbook Name:: mailserver_provisioning
-# Recipe:: drbd_inplace_upgrade
-#
+# Cookbook Name:: extended_drbd
+# Resource:: wait_until
 # Copyright (C) 2012 Justin Witrick
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,17 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # 
+actions :run
 
-include_recipe "#{@cookbook_name}"
+attribute :command, :kind_of => String
+attribute :message, :kind_of => String
+attribute :wait_interval, :kind_of => Integer
 
-stop_file = node['drbd']['initialized']['stop_file']
-drbd_st_fi = node['drbd']['stop_file']
-
-execute "create stop files" do
-  command "echo 'Creating stop files'"
-  not_if { ::File.exists?(drbd_st_fi) }
-  notifies :create, "extended_drbd_immutable_file[#{stop_file}]", :immediately
-  notifies :create, "extended_drbd_immutable_file[#{drbd_st_fi}]", :immediately
+def initialize(*args)
+  super
+  @action = :run
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby
