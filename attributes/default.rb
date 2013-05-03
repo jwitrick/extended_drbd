@@ -1,5 +1,5 @@
 
-if node['kernel']['release'].include?("xen")
+if node['kernel']['release'] and node['kernel']['release'].include?("xen")
   default['drbd']['packages'] = ["kmod-drbd83", "drbd83", "kmod-drbd83-xen"]
 else
   default['drbd']['packages'] = ["kmod-drbd83", "drbd83"]

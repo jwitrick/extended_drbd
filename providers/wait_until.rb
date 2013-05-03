@@ -25,7 +25,7 @@ action :run do
   ruby_block new_resource.name do
     block do
       until system(command) do
-        Log message
+        Chef::Log.info message
         sleep wait_interval
       end
     end

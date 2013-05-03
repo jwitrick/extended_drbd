@@ -32,8 +32,8 @@ execute "drbdadm create-md all" do
   command "echo 'Running create-md' ; yes yes |drbdadm create-md all"
   not_if { ::File.exists?(drbd_stopf) }
   action :run
-  notifies :restart, resources(:service => 'drbd'), :immediately
-  notifies :create, "extended_drbd_immutable_file[#{drbd_initf}", :immediately
+  notifies :restart, "service[drbd]", :immediately
+  notifies :create, "extended_drbd_immutable_file[#{drbd_initf}]", :immediately
 end
 
 execute "modprobe drbd"
@@ -52,7 +52,7 @@ ruby_block "check if other server is primary" do
     end
   end
   only_if { node['drbd']['primary']['fqdn'].eql? node['fqdn'] }
-  action :nothing
+  action :create
 end
 
 bash "setup drbd on master" do
@@ -65,8 +65,8 @@ drbdsetup #{node['drbd']['dev']} syncer -r 110M
   only_if do
     master = node['drbd']['master']
     drbd_chk_out = Chef::ShellOut.new(drbd_chk_cmd).run_command.stdout
-    primary = drbd_chk.out.include?("Primary/")
-    if master and primary and not ::File.exists?(drbd_stopf)
+    primary = drbd_chk_out.include?("Primary/")
+    if master or primary and not ::File.exists?(drbd_stopf)
       true
     end
   end
@@ -118,24 +118,24 @@ ruby_block "check configuration on both servers" do
   block do
     drbd_correct = true
     drbd_role_cmd = Chef::ShellOut.new("drbdadm role #{resource}")
-    drbd_role_out = drbd_role_cmd.run_command
+    drbd_role_out = drbd_role_cmd.run_command.stdout.delete("\n")
     drbd_dstate_cmd = Chef::ShellOut.new("drbdadm dstate #{resource}")
-    drbd_dstate_out = drbd_role_cmd.run_command
+    drbd_dstate_out = drbd_dstate_cmd.run_command.stdout.delete("\n")
     drbd_cstate_cmd = Chef::ShellOut.new("drbdadm cstate #{resource}")
-    drbd_cstate_out = drbd_role_cmd.run_command
+    drbd_cstate_out = drbd_cstate_cmd.run_command.stdout.delete("\n")
 
-    if not drbd_role_out.stdout.include?("Primary/Secondary") or
-      not drbd_role_out.stdout.include?("Secondary/Primary")
+    if not drbd_role_out.include?("Primary/Secondary") and
+        not drbd_role_out.include?("Secondary/Primary")
       Chef::Log.info("The drbd role was not correctly configured.")
-      Chef::Log.info("drbdadm output: #{drbd_role_out.stdout}")
+      Chef::Log.info("drbdadm output: #{drbd_role_out}")
       drbd_correct = false
-    elsif not drbd_dstate_out.stdout.include?("UpToDate/UpToDate")
+    elsif not drbd_dstate_out.include?("UpToDate/UpToDate")
       Chef::Log.info("The drbd dstate not correctly configured.")
-      Chef::Log.info("drbdadm output: #{drbd_dstate_out.stdout}")
+      Chef::Log.info("drbdadm output: #{drbd_dstate_out}")
       drbd_correct = false
-    elsif not drbd_cstate_out.stdout.include?("Connected")
+    elsif not drbd_cstate_out.include?("Connected")
       Chef::Log.info("The drbd cstate not correctly configured.")
-      Chef::Log.info("drbdadm output: #{drbd_cstate_out.stdout}")
+      Chef::Log.info("drbdadm output: #{drbd_cstate_out}")
       drbd_correct = false
     end
 
