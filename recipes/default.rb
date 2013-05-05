@@ -35,10 +35,10 @@ node['drbd']['packages'].each do |p|
   end
 end
 
-node['my_expected_ip'] ||= node['ipaddress']
+node.normal['my_expected_ip'] ||= node['ipaddress']
 
 if not defined? node['server_short_hostname']
-  node.normal = node['fqdn']
+  node.normal['server_short_hostname'] = node['fqdn']
 end
 
 if not defined? node['server_partner_ip']

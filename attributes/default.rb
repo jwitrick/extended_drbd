@@ -7,13 +7,14 @@ end
 
 default['drbd']['remote_host'] = nil
 default['drbd']['disk']['start'] = "/dev/"
-default['drbd']['mount'] = "/data"
+#default['drbd']['mount'] = "/data"
 default['drbd']['fs_type'] = "ext3"
 default['drbd']['dev'] = "/dev/drbd0"
 default['drbd']['master'] = false
 default['drbd']['port'] = 7789
 default['drbd']['syncrate'] = "36M"
 default['drbd']['resource'] = "data"
+default['drbd']['disk']['location'] = "/dev/local/#{node['drbd']['resource']}"
 
 default['drbd']['config_file'] = "/etc/drbd.conf"
 
@@ -22,6 +23,10 @@ default['drbd']['synced']['stop_file'] = "/etc/drbd_synced_stop_file"
 default['drbd']['initialized']['stop_file'] = "/etc/drbd_initialized_stop_file"
 
 default['drbd']['primary']['fqdn'] = nil
+default['drbd']['server']['hostname'] = nil
+default['drbd']['server']['ip'] = nil
+default['drbd']['partner']['server']['hostname'] = nil
+default['drbd']['partner']['server']['ip'] = nil
 
 default['drbd']['command_timeout'] = 36000
 
