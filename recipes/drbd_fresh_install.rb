@@ -105,7 +105,8 @@ execute "change sync rate on secondary server if this is an inplace upgrade" do
   only_if { system(drbd_secondary_check) and not ::File.exists?(drbd_stopf) }
 end
 
-extended_drbd_wait_until "wait until drbd is in a constant state" do
+#extended_drbd_wait_until "wait until drbd is in a constant state" do
+wait_until "wait until drbd is in a constant state" do
   command "grep -q 'ds:UpToDate/UpToDate' /proc/drbd"
   message "Wait until drbd is not in an inconsistent state"
   wait_interval 60

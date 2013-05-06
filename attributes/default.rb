@@ -5,6 +5,10 @@ else
   default['drbd']['packages'] = ["kmod-drbd83", "drbd83"]
 end
 
+node['drbd']['packages'].each do |pkg|
+  default['drbd'][pkg]['version'] = nil
+end
+
 default['drbd']['remote_host'] = nil
 default['drbd']['disk']['start'] = "/dev/"
 #default['drbd']['mount'] = "/data"
@@ -24,9 +28,9 @@ default['drbd']['initialized']['stop_file'] = "/etc/drbd_initialized_stop_file"
 
 default['drbd']['primary']['fqdn'] = nil
 default['drbd']['server']['hostname'] = nil
-default['drbd']['server']['ip'] = nil
-default['drbd']['partner']['server']['hostname'] = nil
-default['drbd']['partner']['server']['ip'] = nil
+default['drbd']['server']['ipaddress'] = nil
+default['drbd']['partner']['hostname'] = nil
+default['drbd']['partner']['ipaddress'] = nil
 
 default['drbd']['command_timeout'] = 36000
 

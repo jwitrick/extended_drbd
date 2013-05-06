@@ -29,41 +29,65 @@ end
 
 node['drbd']['packages'].each do |p|
   yum_package p do
-    version node['drbd'][p]['version'] if defined? node['drbd'][p]['version']
+    version node['drbd'][p]['version']
     allow_downgrade true
     action :install
   end
 end
 
-node.normal['my_expected_ip'] ||= node['ipaddress']
+#node.normal['drbd']['server']['ipaddress'] ||= node['ipaddress']
 
-if not defined? node['server_short_hostname']
-  node.normal['server_short_hostname'] = node['fqdn']
+#puts "PRINTING ip"
+#puts node['drbd']['server']['ipaddress']
+
+if not node['drbd']['server']['ipaddress']
+  node.normal['drbd']['server']['ipaddress'] = node['ipaddress']
 end
 
-if not defined? node['server_partner_ip']
+if not node['drbd']['server']['hostname']
+  node.normal['drbd']['server']['hostname'] = node['fqdn']
+end
+
+if not node['drbd']['partner']['hostname'] or 
+  not node['drbd']['partner']['ipaddress']
   if Chef::Config['solo']
     Log "You are running as solo, search does not work" do
       level :warn
     end
-    node.normal['server_partner_ip'] = nil
+  elsif not node['drbd']['partner']['hostname']
+    Log "Specified partner hostname is nil, cannot search." do
+      level :warn
+    end
   else
-    host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
-    node.normal['server_partner_ip'] = host["ipaddress"]
+    host = search(:node, %Q{fqdn:"#{node['drbd']['partner']['hostname']}"})
+    host = host.first
+    node.normal['drbd']['partner']['ipaddress'] = host['ipaddress']
   end
 end
 
-if not defined? node['server_partner_short_hostname']
-  if Chef::Config['solo']
-    Log "You are running as solo, search does not work" do
-      level :warn
-    end
-    node.normal['server_partner_short_hostname'] = nil
-  else
-    host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
-    node.normal['server_partner_short_hostname'] = host["hostname"]
-  end
-end
+# if not node['server_partner_ip']
+#   if Chef::Config['solo']
+#     Log "You are running as solo, search does not work" do
+#       level :warn
+#     end
+#     node.normal['server_partner_ip'] = nil
+#   else
+#     host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
+#     node.normal['server_partner_ip'] = host["ipaddress"]
+#   end
+# end
+# 
+# if not defined? node['server_partner_short_hostname']
+#   if Chef::Config['solo']
+#     Log "You are running as solo, search does not work" do
+#       level :warn
+#     end
+#     node.normal['server_partner_short_hostname'] = nil
+#   else
+#     host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
+#     node.normal['server_partner_short_hostname'] = host["hostname"]
+#   end
+# end
 
 Log "Creating template with disk resource #{node['drbd']['disk']}"
 template node['drbd']['config_file'] do
