@@ -35,18 +35,9 @@ node['drbd']['packages'].each do |p|
   end
 end
 
-#node.normal['drbd']['server']['ipaddress'] ||= node['ipaddress']
+node.normal['drbd']['server']['ipaddress'] ||= node['ipaddress']
 
-#puts "PRINTING ip"
-#puts node['drbd']['server']['ipaddress']
-
-if not node['drbd']['server']['ipaddress']
-  node.normal['drbd']['server']['ipaddress'] = node['ipaddress']
-end
-
-if not node['drbd']['server']['hostname']
-  node.normal['drbd']['server']['hostname'] = node['fqdn']
-end
+node.normal['drbd']['server']['hostname'] ||= node['fqdn']
 
 if not node['drbd']['partner']['hostname'] or 
   not node['drbd']['partner']['ipaddress']
@@ -65,31 +56,7 @@ if not node['drbd']['partner']['hostname'] or
   end
 end
 
-# if not node['server_partner_ip']
-#   if Chef::Config['solo']
-#     Log "You are running as solo, search does not work" do
-#       level :warn
-#     end
-#     node.normal['server_partner_ip'] = nil
-#   else
-#     host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
-#     node.normal['server_partner_ip'] = host["ipaddress"]
-#   end
-# end
-# 
-# if not defined? node['server_partner_short_hostname']
-#   if Chef::Config['solo']
-#     Log "You are running as solo, search does not work" do
-#       level :warn
-#     end
-#     node.normal['server_partner_short_hostname'] = nil
-#   else
-#     host = search(:node, %Q{fqdn:"#{node['drbd']['remote_host']}"}).first
-#     node.normal['server_partner_short_hostname'] = host["hostname"]
-#   end
-# end
-
-Log "Creating template with disk resource #{node['drbd']['disk']}"
+Log "Creating template with disk resource #{node['drbd']['disk']['location']}"
 template node['drbd']['config_file'] do
   source "drbd.conf.erb"
   variables(
