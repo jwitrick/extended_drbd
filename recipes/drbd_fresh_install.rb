@@ -26,7 +26,7 @@ drbd_stopf = node['drbd']['stop_file']
 drbd_initf = node['drbd']['initialized']['stop_file']
 drbd_syncf = node['drbd']['synced']['stop_file']
 
-remote_ip = node['server_partner_ip']
+remote_ip = node['drbd']['partner']['ipaddress']
 
 execute "drbdadm create-md all" do
   command "echo 'Running create-md' ; yes yes |drbdadm create-md all"
@@ -48,10 +48,13 @@ ruby_block "check if other server is primary" do
         node.save
       end
     else
-      node.set['drbd']['master'] = false
+      node.normal['drbd']['master'] = false
     end
   end
-  only_if { node['drbd']['primary']['fqdn'].eql? node['fqdn'] }
+  only_if do
+    chk = node['drbd']['primary']['fqdn'].eql? node['fqdn'] 
+    chk and not node['drbd']['master']
+  end
   action :create
 end
 
@@ -105,7 +108,6 @@ execute "change sync rate on secondary server if this is an inplace upgrade" do
   only_if { system(drbd_secondary_check) and not ::File.exists?(drbd_stopf) }
 end
 
-#extended_drbd_wait_until "wait until drbd is in a constant state" do
 wait_until "wait until drbd is in a constant state" do
   command "grep -q 'ds:UpToDate/UpToDate' /proc/drbd"
   message "Wait until drbd is not in an inconsistent state"

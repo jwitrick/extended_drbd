@@ -1,6 +1,6 @@
 require 'chefspec'
 
-describe 'extended_drbd::default - inplace' do
+describe 'extended_drbd::default' do
   let(:recipe) { 'extended_drbd::default' }
   let(:server_name) { "test1" }
   let(:server_ip) { "192.168.1.1" }
@@ -15,7 +15,7 @@ describe 'extended_drbd::default - inplace' do
       #For some reason if other cookbooks that change this value
       #are within the same cookbook root level then there atts values
       #override the default one
-      node.normal['drbd']['resource'] = "data"
+      node.override['drbd']['resource'] = "data"
       node.normal['drbd']['server']['hostname'] = server_name
       node.normal['drbd']['server']['ipaddress'] = server_ip
       node.normal['drbd']['partner']['ipaddress'] = partner_ip
