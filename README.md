@@ -21,14 +21,16 @@ Prerequisites:
 
 - Chef client must be installed on both servers.
 
-- The disk location (`node['drbd']['disk']`) must exist.
+- The disk location `node['drbd']['disk']['location']` must exist.
 
 Note: In order for this work properly both servers need to be running chef
 at the same time,
 
 You will need to have the following attribute values specified:
 
-`node['drbd']['primary']['fqdn']` and `node['drbd']['remote_host']`
+`node['drbd']['primary']['fqdn']` and `node['drbd']['partner']['hostname']`
+
+Note: If you do not specify both attributes then the chef run will error out.
 
 Once one server has been specified as drbd master you can add the recipe
 "drbd::drbd_fresh_install" to the run_list of both servers.
@@ -44,7 +46,7 @@ On which ever server you are updated (or both) add the recipe
 "drbd::drbd_inplace_upgrade" to the server's run_list. And the next
 time Chef-client runs it will preform the changes in a safe way.
 
-The ways I have used this have been to call this drbd cookbook from within
+The way I have used this have been to call this drbd cookbook from within
 another cookbook, and have the second cookbook do the logic of decided whether
 or not this is a fresh install or inplace upgrade.
 
@@ -59,7 +61,7 @@ Here is how I use it:
 Attributes:
 ===========
  * `default['drbd']['packages'] = ["kmod-drbd83", "drbd83"]`
- * `default['drbd']['disk'] = "/dev/local/data"`
+ * `default['drbd']['disk']['location'] = "/dev/local/data"`
  * `default['drbd']['mount'] = "/data"`
  * `default['drbd']['fs_type'] = "ext3"`
  * `default['drbd']['dev'] = "/dev/drbd0"`
@@ -71,8 +73,33 @@ Attributes:
  * `default['drbd']['stop_file'] = "/etc/drbd_stop_file"`
  * `default['drbd']['synced']['stop_file'] = "/etc/drbd_synced_stop_file"`
  * `default['drbd']['initialized']['stop_file'] = "/etc/drbd_initialized_stop_file"`
- * `default['drbd']['primary']['fqdn'] = nil`
- * `default['drbd']['remote_host'] = nil`
+
+ * `default['drbd']['primary']['fqdn'] = nil` - Fqdn of the primary drbd server
+ * `default['drbd']['server']['hostname'] = nil` - Fqdn of the server
+   Note: This will use the `node['fqdn']` if not specified.
+ * `default['drbd']['server']['ipaddress'] = nil` - Ipaddress of the server
+   Note: This will use `node['ipaddress']` if nil.
+ * `default['drbd']['partner']['hostname'] = nil` - Fqdn of the partner server
+ * `default['drbd']['partner']['ipaddress'] = nil` - Ipaddress of the parter server
+   Note: If not specified chef will try to search the chef-server using 
+   `node['drbd']['partner']['hostname']` to find the node object.
+
+ * `default['drbd']['command_timeout'] = 36000` - A timeout value used when
+   trying to create a filesystem of a huge data store.
+ * `default['drbd']['protocol'] = 'C'` - The protocal used by the drbd app.
+ * `default['drbd']['disk']['on_io_error_action'] = 'detach'`
+ * `default['drbd']['disk']['disk-flushes'] = false`
+ * `default['drbd']['disk']['md-flushes'] = false`
+ * `default['drbd']['disk']['no-disk-barrier'] = false`
+ * `default['drbd']['net']['enabled'] = false`
+ * `default['drbd']['net']['sndbuf-size'] = '1M'`
+ * `default['drbd']['net']['max-buffers'] = 8000`
+ * `default['drbd']['net']['max-epoch-size'] = 8000`
+
+# Testing
+This recipe includes a number of chefspec unit tests for this cookbook.
+
+To execute the tests run `rspec spec/`
 
 # License and Author
 
