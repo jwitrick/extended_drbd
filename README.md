@@ -5,6 +5,11 @@ This cookbook is designed to setup and configure a pair of server with
 drbd.
 Please Note: this cookbook does not mount the drbd drive.
 
+This cookbook assumes that you want it to control your firewall using iptables,
+as such it will attempt to open/close the correct ports. If you want to disable
+this functionality you can modify the attribute `node['iptables']['enabled']` 
+and set it to `false`.
+
 This cookbook can be used in the following situations:
 
 1) Fresh server pair installation (please see below for how to use).
@@ -95,6 +100,8 @@ Attributes:
  * `default['drbd']['net']['sndbuf-size'] = '1M'`
  * `default['drbd']['net']['max-buffers'] = 8000`
  * `default['drbd']['net']['max-epoch-size'] = 8000`
+
+ * `default['iptables']['enabled'] = true`
 
 # Testing
 This recipe includes a number of chefspec unit tests for this cookbook.

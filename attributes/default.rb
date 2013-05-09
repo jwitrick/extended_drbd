@@ -44,3 +44,5 @@ default['drbd']['net']['enabled'] = false
 default['drbd']['net']['sndbuf-size'] = '1M'
 default['drbd']['net']['max-buffers'] = 8000
 default['drbd']['net']['max-epoch-size'] = 8000
+
+default['iptables']['enabled'] = true

@@ -25,6 +25,12 @@ describe 'extended_drbd::default' do
   }
 
   shared_examples_for 'extended_drbd' do
+
+    it 'should include recipe extended_drbd::iptables' do
+      chef_run.converge recipe
+      expect(chef_run).to include_recipe 'extended_drbd::iptables'
+    end
+
     it 'should set the server ip when attribule is nil' do
       chef_run.node.normal['drbd']['server']['ipaddress'] = nil
       chef_run.converge recipe

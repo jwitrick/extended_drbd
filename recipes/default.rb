@@ -17,6 +17,8 @@
 # limitations under the License.
 # 
 
+include_recipe "#{@cookbook_name}::iptables"
+
 inplace = File.exists?(node['drbd']['config_file'])
 
 if node['drbd']['fs_type'] == 'xfs'
