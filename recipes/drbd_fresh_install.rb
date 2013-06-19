@@ -3,44 +3,37 @@
 # Recipe:: drbd_fresh_install
 # Copyright (C) 2012 Justin Witrick
 #
-# This program is free software; you can reistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-# USA.
-#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
 
 include_recipe "#{@cookbook_name}"
+
+resource                    = node['drbd']['resource']
+drbd_chk_cmd = "drbdadm role #{node['drbd']['resource']}"
 drbd_primary_check          = "cat /proc/drbd |grep -q 'Primary/'"
 drbd_secondary_check        = "cat /proc/drbd |grep -q 'Secondary/'"
-resource                    = node[:drbd][:resource]
-my_ip                       = node[:my_expected_ip].nil? ? node[:ipaddress] : node[:my_expected_ip]
-node.set['drbd']['ssh_command'] = "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+drbd_stopf = node['drbd']['stop_file']
+drbd_initf = node['drbd']['initialized']['stop_file']
+drbd_syncf = node['drbd']['synced']['stop_file']
 
-remote_ip = node[:server_partner_ip]
+remote_ip = node['drbd']['partner']['ipaddress']
 
 execute "drbdadm create-md all" do
   command "echo 'Running create-md' ; yes yes |drbdadm create-md all"
-  not_if {::File.exists?(node['drbd']['stop_file'])}
+  not_if { ::File.exists?(drbd_stopf) }
   action :run
-  notifies :restart, resources(:service => 'drbd'), :immediately
-  notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:initialized][:stop_file]}]", :immediately
-end
-
-wait_til "drbd_initialized on other server" do
-    command "#{node['drbd']['ssh_command']} -q #{remote_ip} [ -f #{node[:drbd][:initialized][:stop_file]} ] "
-    message "Wait for drbd to be initialized on #{remote_ip}"
-    wait_interval 5
-    not_if {::File.exists?(node['drbd']['stop_file'])}
+  notifies :restart, "service[drbd]", :immediately
+  notifies :create, "extended_drbd_immutable_file[#{drbd_initf}]", :immediately
 end
 
 execute "modprobe drbd"
@@ -49,16 +42,20 @@ ruby_block "check if other server is primary" do
   block do
     drbd_check = Chef::ShellOut.new("drbdadm role all").run_command.stdout
     if not drbd_check.include?("Secondary/Primary")
-      node.set[:drbd][:master] = true
+      node.normal['drbd']['master'] = true
       Chef::Log.info("This is a DRBD master")
       unless Chef::Config[:solo]
         node.save
       end
     else
-      node.set['drbd']['master'] = false
+      node.normal['drbd']['master'] = false
     end
   end
-  only_if { node[:drbd][:primary][:fqdn].eql? node[:fqdn] }
+  only_if do
+    chk = node['drbd']['primary']['fqdn'].eql? node['fqdn'] 
+    chk and not node['drbd']['master']
+  end
+  action :create
 end
 
 bash "setup drbd on master" do
@@ -66,91 +63,91 @@ bash "setup drbd on master" do
   code <<-EOH
 drbdadm -- --overwrite-data-of-peer primary #{resource}
 echo 'Changing sync rate to 110M'
-drbdsetup #{node[:drbd][:dev]} syncer -r 110M
+drbdsetup #{node['drbd']['dev']} syncer -r 110M
   EOH
-  only_if { (node['drbd']['master'] == true or system(drbd_primary_check)) and (not ::File.exists?(node['drbd']['stop_file'])) }
-  notifies :run, "execute[setup xfs filesystem]", :immediately if node['drbd']['fs_type'] == "xfs"
-  notifies :run, "execute[setup ext file system]", :immediately if node['drbd']['fs_type'] != "xfs"
+  only_if do
+    master = node['drbd']['master']
+    drbd_chk_out = Chef::ShellOut.new(drbd_chk_cmd).run_command.stdout
+    primary = drbd_chk_out.include?("Primary/")
+    if master or primary and not ::File.exists?(drbd_stopf)
+      true
+    end
+  end
 end
 
 execute "setup xfs filesystem" do
-  command "mkfs.#{node['drbd']['fs_type']} -L #{resource} -f #{node[:drbd][:dev]}"
+  subscribes :run, "bash[setup drbd on master]", :immediately
+  cmd = "mkfs.#{node['drbd']['fs_type']} -L #{resource}" +
+    " -f #{node['drbd']['dev']}"
+  command cmd
   timeout node['drbd']['command_timeout']
   action :nothing
+  only_if { node['drbd']['fs_type'].eql? "xfs" }
 end
+
 execute "setup ext file system" do
-  command "mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource} -T news #{node[:drbd][:dev]}"
+  subscribes :run, "bash[setup drbd on master]", :immediately
+  cmd = "mkfs.#{node['drbd']['fs_type']} -m 1 -L #{resource}" +
+    " -T news #{node['drbd']['dev']}"
+  command cmd
   timeout node['drbd']['command_timeout']
   notifies :run, "execute[configure fs]", :immediately
+  not_if { node['drbd']['fs_type'].eql? "xfs" }
   action :nothing
 end
 
 execute "configure fs" do
-  command "tune2fs -c0 -i0 #{node[:drbd][:dev]}"
+  command "tune2fs -c0 -i0 #{node['drbd']['dev']}"
   timeout node['drbd']['command_timeout']
   action :nothing
 end
 
-execute "change sync rate on secondary server only if this is an inplace upgrade" do
-  command "drbdsetup #{node[:drbd][:dev]} syncer -r 110M"
+execute "change sync rate on secondary server if this is an inplace upgrade" do
+  command "drbdsetup #{node['drbd']['dev']} syncer -r 110M"
   action :run
-  only_if { system(drbd_secondary_check) and not ::File.exists?(node['drbd']['stop_file']) }
+  only_if { system(drbd_secondary_check) and not ::File.exists?(drbd_stopf) }
 end
 
-wait_til_not "wait until drbd is in a constant state" do
-  command "grep -q ds:.*Inconsistent /proc/drbd"
+wait_until "wait until drbd is in a constant state" do
+  command "grep -q 'ds:UpToDate/UpToDate' /proc/drbd"
   message "Wait until drbd is not in an inconsistent state"
   wait_interval 60
-  not_if { ::File.exists?(node['drbd']['stop_file']) }
+  not_if { ::File.exists?(drbd_stopf) }
   notifies :run, "execute[adjust drbd]", :immediately
-  notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:synced][:stop_file]}]", :immediately
+  notifies :create, "extended_drbd_immutable_file[#{drbd_syncf}]", :immediately
 end
 
 ruby_block "check configuration on both servers" do
   block do
     drbd_correct = true
-    if node[:drbd][:master]
-      if not system("drbdadm role #{resource} | grep -q \"Primary/Secondary\"")
-        Chef::Log.info("The drbd master role was not correctly configured.")
-        drbd_correct = false
-      end
-      if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role #{resource} | grep -q \"Secondary/Primary\"")
-        Chef::Log.info("The drbd secondary role was not correctly configured.")
-        drbd_correct = false
-      end
-      else
-        if not system("drbdadm role #{resource} | grep -q \"Secondary/Primary\"")
-          Chef::Log.info("The drbd master role was not correctly configured.")
-          drbd_correct = false
-         end
-          if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm role #{resource} | grep -q \"Primary/Secondary\"")
-            Chef::Log.info("The drbd secondary role was not correctly configured.")
-            drbd_correct = false
-          end
-      end
+    drbd_role_cmd = Chef::ShellOut.new("drbdadm role #{resource}")
+    drbd_role_out = drbd_role_cmd.run_command.stdout.delete("\n")
+    drbd_dstate_cmd = Chef::ShellOut.new("drbdadm dstate #{resource}")
+    drbd_dstate_out = drbd_dstate_cmd.run_command.stdout.delete("\n")
+    drbd_cstate_cmd = Chef::ShellOut.new("drbdadm cstate #{resource}")
+    drbd_cstate_out = drbd_cstate_cmd.run_command.stdout.delete("\n")
 
-      if not system("drbdadm dstate #{resource} | grep -q \"UpToDate/UpToDate\"")
-        Chef::Log.info("The drbd master dstate was not correctly configured.")
-        drbd_correct = false
-      end
-      if not system("drbdadm cstate #{resource} | grep -q \"Connected\"")
-        Chef::Log.info("The drbd master cstate was not correctly configured.")
-        drbd_correct = false
-      end
-      if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm dstate #{resource} | grep -q \"UpToDate/UpToDate\"")
-        Chef::Log.info("The drbd secondary dstate was not correctly configured.")
-        drbd_correct = false
-      end
-      if not system("#{node['drbd']['ssh_command']} #{remote_ip} drbdadm cstate #{resource} | grep -q \"Connected\"")
-        Chef::Log.info("The drbd secondary cstate was not correctly configured.")
-        drbd_correct = false
-      end
+    if not drbd_role_out.include?("Primary/Secondary") and
+        not drbd_role_out.include?("Secondary/Primary")
+      Chef::Log.info("The drbd role was not correctly configured.")
+      Chef::Log.info("drbdadm output: #{drbd_role_out}")
+      drbd_correct = false
+    elsif not drbd_dstate_out.include?("UpToDate/UpToDate")
+      Chef::Log.info("The drbd dstate not correctly configured.")
+      Chef::Log.info("drbdadm output: #{drbd_dstate_out}")
+      drbd_correct = false
+    elsif not drbd_cstate_out.include?("Connected")
+      Chef::Log.info("The drbd cstate not correctly configured.")
+      Chef::Log.info("drbdadm output: #{drbd_cstate_out}")
+      drbd_correct = false
+    end
 
-      if ! drbd_correct
-        Chef::Application.fatal! "DRBD was not correctly configured. Please correct."
-      end
+    if not drbd_correct
+      Chef::Application.fatal! "DRBD was not correctly configured."
+    end
   end
-  not_if { ::File.exists?(node['drbd']['stop_file']) }
-  notifies :create, "extended_drbd_immutable_file[#{node[:drbd][:stop_file]}]", :immediately
+  not_if { ::File.exists?(drbd_stopf) }
+  notifies :create, "extended_drbd_immutable_file[#{drbd_stopf}]", :immediately
 end
 
+# vim: ai et ts=2 sts=2 sw=2 ft=ruby

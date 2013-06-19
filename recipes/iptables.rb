@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: mailserver_provisioning
-# Recipe:: drbd_inplace_upgrade
+# Cookbook Name:: extended_drbd
+# Recipe:: iptables
 #
 # Copyright (C) 2012 Justin Witrick
 #
@@ -17,16 +17,24 @@
 # limitations under the License.
 # 
 
-include_recipe "#{@cookbook_name}"
+if node['iptables']['enabled']
+  include_recipe "iptables"
 
-stop_file = node['drbd']['initialized']['stop_file']
-drbd_st_fi = node['drbd']['stop_file']
+  
+  iptables_rule 'drbd_port' do
+    source "iptables/drbd.erb"
+  end
 
-execute "create stop files" do
-  command "echo 'Creating stop files'"
-  not_if { ::File.exists?(drbd_st_fi) }
-  notifies :create, "extended_drbd_immutable_file[#{stop_file}]", :immediately
-  notifies :create, "extended_drbd_immutable_file[#{drbd_st_fi}]", :immediately
+  if not ::File.exists?("/etc/iptables.d/drbd_port")
+    #This is a hack to make it open the port before drbd service runs
+    ruby_block "rebuild iptables now" do
+      block do
+      end
+      notifies :run, "execute[rebuild-iptables]", :immediately
+    end
+  end
+else
+  include_recipe "iptables::disabled"
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby
