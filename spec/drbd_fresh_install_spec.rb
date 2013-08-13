@@ -7,9 +7,9 @@ describe 'extended_drbd::drbd_fresh_install' do
   let(:partner_name) { "test2" }
   let(:partner_ip) { "192.168.1.2" }
   let(:chef_run) {
-    runner = ChefSpec::ChefRunner.new(platform: 'redhat', version: '6.3') do 
-      |node|
-      node.automatic_attrs['fqdn'] = server_name
+    runner = ChefSpec::ChefRunner.new(platform: 'redhat', version: '6.3') do
+      |noode|
+      node.au tomatic_attrs['fqdn'] = server_name
       node.automatic_attrs['ipaddress'] = server_ip
 
       #For some reason if other cookbooks that change this value
@@ -40,7 +40,7 @@ describe 'extended_drbd::drbd_fresh_install' do
         |node|
         node.automatic_attrs['fqdn'] = server_name
         node.automatic_attrs['ipaddress'] = server_ip
-  
+
         #For some reason if other cookbooks that change this value
         #are within the same cookbook root level then there atts values
         #override the default one
@@ -100,7 +100,7 @@ describe 'extended_drbd::drbd_fresh_install' do
 
   shared_examples_for 'drbd_fresh_install primary xfs filesystem' do
     before :each do
-      chef_run.node.normal['drbd']['fs_type'] = 'xfs' 
+      chef_run.node.normal['drbd']['fs_type'] = 'xfs'
     end
 
     it 'should execute setup xfs filesystem' do
@@ -110,7 +110,7 @@ describe 'extended_drbd::drbd_fresh_install' do
       expect(chef_run).to execute_command 'mkfs.xfs -L data -f /dev/drbd0'
     end
 
-# TODO: This is commented out because even though the conditional block will 
+# TODO: This is commented out because even though the conditional block will
 # stop it from running chef_spec still thinks it ran
 #    it 'should not execute setup xfs filesystem' do
 #      File.stub(:exists?).and_call_original
@@ -133,7 +133,7 @@ describe 'extended_drbd::drbd_fresh_install' do
       expect(chef_run).to execute_command \
         'mkfs.ext3 -m 1 -L data -T news /dev/drbd0'
     end
-    
+
     it 'should execute setup ext3 file system' do
       chef_run.node.normal['drbd']['fs_type'] = 'ext4'
       chef_run.converge recipe
@@ -169,13 +169,13 @@ describe 'extended_drbd::drbd_fresh_install' do
     end
 
     it_should_behave_like 'drbd_fresh_install primary xfs filesystem'
-    it_should_behave_like 'drbd_fresh_install primary ext filesystem' 
+    it_should_behave_like 'drbd_fresh_install primary ext filesystem'
 
-# TODO: This is commented out because even though the conditional block will 
+# TODO: This is commented out because even though the conditional block will
 # stop it from running chef_spec still thinks it ran
 #    it 'should not execute ruby_block b/c the master attr is true' do
 #      chef_run.converge recipe
-#      expect(chef_run).not_to execute_ruby_block 
+#      expect(chef_run).not_to execute_ruby_block
 #        'check if other server is primary'
 #    end
 
@@ -194,7 +194,7 @@ describe 'extended_drbd::drbd_fresh_install' do
     it_should_behave_like 'extended_drbd::drbd_fresh_install'
     it_should_behave_like 'drbd_fresh_install - stop file exists'
     it_should_behave_like 'drbd_fresh_install - no stop file'
-    #TODO: Need to figure out how to tell chef_spec that a resouce was not 
+    #TODO: Need to figure out how to tell chef_spec that a resouce was not
     #executed due to only_if block.
   end
 

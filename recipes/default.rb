@@ -41,7 +41,7 @@ node.normal['drbd']['server']['ipaddress'] ||= node['ipaddress']
 
 node.normal['drbd']['server']['hostname'] ||= node['fqdn']
 
-if not node['drbd']['partner']['hostname'] or 
+if not node['drbd']['partner']['hostname'] or
   not node['drbd']['partner']['ipaddress']
   if Chef::Config['solo']
     Log "You are running as solo, search does not work" do
@@ -62,11 +62,7 @@ Log "Creating template with disk resource #{node['drbd']['disk']['location']}"
 template node['drbd']['config_file'] do
   source "drbd.conf.erb"
   variables(
-    :resource => node['drbd']['resource'],
-    :my_ip => node['my_expected_ip'],
-    :my_short_hostname => node['server_short_hostname'],
-    :partner_ip => node['server_partner_ip'],
-    :partner_short_hostname => node['server_partner_short_hostname']
+    :resource => node['drbd']['resource']
   )
   owner "root"
   group "root"
