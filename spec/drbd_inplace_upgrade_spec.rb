@@ -1,4 +1,4 @@
-require 'chefspec'
+require 'spec_helper'
 
 describe 'extended_drbd::drbd_inplace_upgrade' do
   let(:recipe) { 'extended_drbd::drbd_inplace_upgrade' }
@@ -7,8 +7,8 @@ describe 'extended_drbd::drbd_inplace_upgrade' do
   let(:partner_name) { "test2" }
   let(:partner_ip) { "192.168.1.2" }
   let(:chef_run) {
-    runner = ChefSpec::ChefRunner.new(platform: 'redhat', version: '6.3',
-      :step_into => ['extended_drbd_immutable_file']) do |node|
+    runner = ChefSpec::ChefRunner.new(RUNNER_OPTS.merge(
+      :step_into => ['extended_drbd_immutable_file'])) do |node|
         node.automatic_attrs['fqdn'] = server_name
         node.automatic_attrs['ipaddress'] = server_ip
 
@@ -23,6 +23,14 @@ describe 'extended_drbd::drbd_inplace_upgrade' do
       end
     runner
   }
+
+  before :each do
+    Chef::ResourceCollection.any_instance.stub(:find).with('service[drbd]')
+    Chef::ResourceCollection.any_instance.stub(:find).with(
+      'extended_drbd_immutable_file[/etc/drbd_initialized_stop_file]')
+    Chef::ResourceCollection.any_instance.stub(:find).with(
+      'extended_drbd_immutable_file[/etc/drbd_stop_file]')
+  end
 
   shared_examples_for 'extended_drbd::drbd_inplace_upgrade' do
     it 'should include recipe extended_drbd::default' do

@@ -1,4 +1,4 @@
-require 'chefspec'
+require 'spec_helper'
 
 describe 'extended_drbd::drbd_fresh_install' do
   let(:recipe) { 'extended_drbd::drbd_fresh_install' }
@@ -7,9 +7,8 @@ describe 'extended_drbd::drbd_fresh_install' do
   let(:partner_name) { "test2" }
   let(:partner_ip) { "192.168.1.2" }
   let(:chef_run) {
-    runner = ChefSpec::ChefRunner.new(platform: 'redhat', version: '6.3') do
-      |noode|
-      node.au tomatic_attrs['fqdn'] = server_name
+    runner = ChefSpec::ChefRunner.new(RUNNER_OPTS) do |node|
+      node.automatic_attrs['fqdn'] = server_name
       node.automatic_attrs['ipaddress'] = server_ip
 
       #For some reason if other cookbooks that change this value
@@ -23,6 +22,16 @@ describe 'extended_drbd::drbd_fresh_install' do
     end
     runner
   }
+
+  before :each do
+    Chef::ResourceCollection.any_instance.stub(:find).with('service[drbd]')
+    Chef::ResourceCollection.any_instance.stub(:find).with(
+      'execute[configure fs]')
+    Chef::ResourceCollection.any_instance.stub(:find).with(
+      'extended_drbd_immutable_file[/etc/drbd_initialized_stop_file]')
+    Chef::ResourceCollection.any_instance.stub(:find).with(
+      'extended_drbd_immutable_file[/etc/drbd_stop_file]')
+  end
 
   shared_examples_for 'extended_drbd::drbd_fresh_install' do
     it 'should include recipe extended_drbd::default' do
