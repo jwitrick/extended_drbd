@@ -113,7 +113,36 @@ Because this cookbook REQUIRES both serves to be running chef at the same time,
 there are a few manual steps involved with using Vagrant.
 
 1) Create both VM's (one at a time).
+
 2) Once both VM's are up and running, edit the Vagrant File:
+<BLOCKQUOTE><PRE>
+Existing file:
+def get_recipes()
+  recipes = %w{
+    chef-solo-search
+    minitest-handler
+    extended_drbd_helper
+    yum::epel
+    yum::elrepo
+  }
+#    extended_drbd::drbd_fresh_install
+#  }
+</PRE></BLOCKQUOTE>
+Please change the file to look like:
+<BLOCKQUOTE><PRE>
+Ater changes:
+def get_recipes()
+  recipes = %w{
+    chef-solo-search
+    minitest-handler
+    extended_drbd_helper
+    yum::epel
+    yum::elrepo
+    extended_drbd::drbd_fresh_install
+  }
+</PRE></BLOCKQUOTE>
+
+3) Now run `vagrant provision <server_name>` for both servers at the same time.
 
 # License and Author
 
