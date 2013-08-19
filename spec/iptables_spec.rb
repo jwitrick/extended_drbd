@@ -37,10 +37,6 @@ describe 'extended_drbd::iptables' do
         with('drbd_port').and_yield
       Chef::Recipe.any_instance.should_receive(:source).
         with('iptables/drbd.erb')
-      Chef::Recipe.any_instance.should_receive(:iptables_rule).
-        with('ssh_port').and_yield
-      Chef::Recipe.any_instance.should_receive(:source).
-        with('iptables/ssh.erb')
       chef_run.converge recipe
       expect(chef_run).to include_recipe 'iptables'
     end
@@ -58,17 +54,12 @@ describe 'extended_drbd::iptables' do
         with('drbd_port').and_yield
       Chef::Recipe.any_instance.should_receive(:source).
         with('iptables/drbd.erb')
-      Chef::Recipe.any_instance.should_receive(:iptables_rule).
-        with('ssh_port').and_yield
-      Chef::Recipe.any_instance.should_receive(:source).
-        with('iptables/ssh.erb')
       chef_run.converge recipe
     end
 
     it 'should not execute rebuild when the file does exist' do
       File.stub(:exists?).and_call_original
       File.stub(:exists?).with('/etc/iptables.d/drbd_port').and_return(true)
-      File.stub(:exists?).with('/etc/iptables.d/ssh_port').and_return(true)
       chef_run.converge recipe
       expect(chef_run).not_to execute_ruby_block 'rebuild iptables now'
     end
