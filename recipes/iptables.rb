@@ -20,7 +20,6 @@
 if node['iptables']['enabled']
   include_recipe "iptables"
 
-  
   iptables_rule 'drbd_port' do
     source "iptables/drbd.erb"
   end

@@ -1,0 +1,21 @@
+{
+  "id": "store1a.mail.testing.mlsrvr.com",
+  "name": "store1a.mail.testing.mlsrvr.com",
+  "chef_environment": "_default",
+  "json_class": "Chef::Node",
+  "automatic": {
+    "fqdn": "store1a.mail.testing.example.com",
+    "ipaddress": "172.31.0.110",
+    "hostname": "store1a.mail.testing.example.com",
+    "os": "centos"
+  },
+  "normal": {
+  },
+  "chef_type": "node",
+  "default": {
+  },
+  "override": {
+  },
+  "run_list": [
+  ]
+}

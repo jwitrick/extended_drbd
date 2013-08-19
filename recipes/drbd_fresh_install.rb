@@ -40,7 +40,7 @@ execute "modprobe drbd"
 
 ruby_block "check if other server is primary" do
   block do
-    drbd_check = Chef::ShellOut.new("drbdadm role all").run_command.stdout
+    drbd_check = Mixlib::ShellOut.new("drbdadm role all").run_command.stdout
     if not drbd_check.include?("Secondary/Primary")
       node.normal['drbd']['master'] = true
       Chef::Log.info("This is a DRBD master")
@@ -52,7 +52,7 @@ ruby_block "check if other server is primary" do
     end
   end
   only_if do
-    chk = node['drbd']['primary']['fqdn'].eql? node['fqdn'] 
+    chk = node['drbd']['primary']['fqdn'].eql? node['fqdn']
     chk and not node['drbd']['master']
   end
   action :create
@@ -67,7 +67,7 @@ drbdsetup #{node['drbd']['dev']} syncer -r 110M
   EOH
   only_if do
     master = node['drbd']['master']
-    drbd_chk_out = Chef::ShellOut.new(drbd_chk_cmd).run_command.stdout
+    drbd_chk_out = Mixlib::ShellOut.new(drbd_chk_cmd).run_command.stdout
     primary = drbd_chk_out.include?("Primary/")
     if master or primary and not ::File.exists?(drbd_stopf)
       true
@@ -108,38 +108,49 @@ execute "change sync rate on secondary server if this is an inplace upgrade" do
   only_if { system(drbd_secondary_check) and not ::File.exists?(drbd_stopf) }
 end
 
-wait_until "wait until drbd is in a constant state" do
-  command "grep -q 'ds:UpToDate/UpToDate' /proc/drbd"
-  message "Wait until drbd is not in an inconsistent state"
-  wait_interval 60
-  not_if { ::File.exists?(drbd_stopf) }
-  notifies :run, "execute[adjust drbd]", :immediately
-  notifies :create, "extended_drbd_immutable_file[#{drbd_syncf}]", :immediately
+if node['drbd']['wait_til_synced']
+  wait_until "wait until drbd is in a constant state" do
+    command "grep -q 'ds:UpToDate/UpToDate' /proc/drbd"
+    message "Wait until drbd is not in an inconsistent state"
+    wait_interval 60
+    not_if { ::File.exists?(drbd_stopf) }
+    notifies :run, "execute[adjust drbd]", :immediately
+    notifies :create, "extended_drbd_immutable_file[#{drbd_syncf}]",
+      :immediately
+  end
 end
 
 ruby_block "check configuration on both servers" do
   block do
     drbd_correct = true
-    drbd_role_cmd = Chef::ShellOut.new("drbdadm role #{resource}")
+    if not node['drbd']['wait_til_synced']
+      Chef::Log.info("Telling Chef to sleep for '10' seconds")
+      sleep(10)
+    end
+    drbd_role_cmd = Mixlib::ShellOut.new("drbdadm role #{resource}")
     drbd_role_out = drbd_role_cmd.run_command.stdout.delete("\n")
-    drbd_dstate_cmd = Chef::ShellOut.new("drbdadm dstate #{resource}")
+    drbd_dstate_cmd = Mixlib::ShellOut.new("drbdadm dstate #{resource}")
     drbd_dstate_out = drbd_dstate_cmd.run_command.stdout.delete("\n")
-    drbd_cstate_cmd = Chef::ShellOut.new("drbdadm cstate #{resource}")
+    drbd_cstate_cmd = Mixlib::ShellOut.new("drbdadm cstate #{resource}")
     drbd_cstate_out = drbd_cstate_cmd.run_command.stdout.delete("\n")
 
     if not drbd_role_out.include?("Primary/Secondary") and
-        not drbd_role_out.include?("Secondary/Primary")
+      not drbd_role_out.include?("Secondary/Primary")
       Chef::Log.info("The drbd role was not correctly configured.")
       Chef::Log.info("drbdadm output: #{drbd_role_out}")
       drbd_correct = false
-    elsif not drbd_dstate_out.include?("UpToDate/UpToDate")
-      Chef::Log.info("The drbd dstate not correctly configured.")
-      Chef::Log.info("drbdadm output: #{drbd_dstate_out}")
-      drbd_correct = false
-    elsif not drbd_cstate_out.include?("Connected")
-      Chef::Log.info("The drbd cstate not correctly configured.")
-      Chef::Log.info("drbdadm output: #{drbd_cstate_out}")
-      drbd_correct = false
+    end
+
+    if drbd_correct and node['drbd']['wait_til_synced']
+      if not drbd_cstate_out.include?("Connected")
+        Chef::Log.info("The drbd cstate not correctly configured.")
+        Chef::Log.info("drbdadm output: #{drbd_cstate_out}")
+        drbd_correct = false
+      elsif not drbd_dstate_out.include?("UpToDate/UpToDate")
+        Chef::Log.info("The drbd dstate not correctly configured.")
+        Chef::Log.info("drbdadm output: #{drbd_dstate_out}")
+        drbd_correct = false
+      end
     end
 
     if not drbd_correct
