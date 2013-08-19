@@ -6,6 +6,19 @@ def boxify()
   [box, box_url]
 end
 
+def get_recipes()
+  recipes = %w{
+    chef-solo-search
+    minitest-handler
+    extended_drbd_helper
+    yum::epel
+    yum::elrepo
+  }
+#    extended_drbd::drbd_fresh_install
+#  }
+  recipes
+end
+
 Vagrant::Config.run do |config|
 
   config.vm.define :store1a do |subconfig|
@@ -27,12 +40,9 @@ Vagrant::Config.run do |config|
           }
         }
       }
-      chef.add_recipe 'chef-solo-search'
-      chef.add_recipe 'minitest-handler'
-      chef.add_recipe 'extended_drbd_helper'
-      chef.add_recipe 'yum::epel'
-      chef.add_recipe 'yum::elrepo'
-      chef.add_recipe 'extended_drbd::drbd_fresh_install'
+      get_recipes.each do |rec|
+        chef.add_recipe rec
+      end
     end
   end
 
@@ -55,23 +65,11 @@ Vagrant::Config.run do |config|
           }
         }
       }
-      chef.add_recipe 'chef-solo-search'
-      chef.add_recipe 'minitest-handler'
-      chef.add_recipe 'extended_drbd_helper'
-      chef.add_recipe 'yum::epel'
-      chef.add_recipe 'yum::elrepo'
-      chef.add_recipe 'extended_drbd::drbd_fresh_install'
+      get_recipes.each do |rec|
+        chef.add_recipe rec
+      end
     end
   end
-
-#  config.vm.provision :chef_solo do |chef|
-#    chef.data_bags_path = 'data_bags'
-#    chef.add_recipe 'chef-solo-search'
-#    chef.add_recipe 'minitest-handler'
-#    chef.add_recipe 'yum::epel'
-#    chef.add_recipe 'yum::elrepo'
-#    chef.add_recipe 'extended_drbd::drbd_fresh_install'
-#  end
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby

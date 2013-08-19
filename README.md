@@ -106,7 +106,14 @@ Attributes:
 # Testing
 This recipe includes a number of chefspec unit tests for this cookbook.
 
-To execute the tests run `rspec spec/`
+To execute the tests run `rake`
+
+This also makes use of vagrant, and creates VM's to make use of the cookbook.
+Because this cookbook REQUIRES both serves to be running chef at the same time,
+there are a few manual steps involved with using Vagrant.
+
+1) Create both VM's (one at a time).
+2) Once both VM's are up and running, edit the Vagrant File:
 
 # License and Author
 
