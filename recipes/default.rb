@@ -39,19 +39,19 @@ end
 
 node.normal['drbd']['server']['ipaddress'] ||= node['ipaddress']
 
-node.normal['drbd']['server']['hostname'] ||= node['fqdn']
+if node['drbd']['server']['hostname'].nil?
+  node.normal['drbd']['server']['hostname'] = node['fqdn']
+end
 
-if not node['drbd']['partner']['hostname'] or 
+if not node['drbd']['partner']['hostname'] or
   not node['drbd']['partner']['ipaddress']
-  if Chef::Config['solo']
-    Log "You are running as solo, search does not work" do
-      level :warn
-    end
-  elsif not node['drbd']['partner']['hostname']
+  if not node['drbd']['partner']['hostname']
     Log "Specified partner hostname is nil, cannot search." do
       level :warn
     end
   else
+    Chef::Log.info("Searching for partner fqdn: "+
+      "#{node['drbd']['partner']['hostname']}")
     host = search(:node, %Q{fqdn:"#{node['drbd']['partner']['hostname']}"})
     host = host.first
     node.normal['drbd']['partner']['ipaddress'] = host['ipaddress']
@@ -62,11 +62,7 @@ Log "Creating template with disk resource #{node['drbd']['disk']['location']}"
 template node['drbd']['config_file'] do
   source "drbd.conf.erb"
   variables(
-    :resource => node['drbd']['resource'],
-    :my_ip => node['my_expected_ip'],
-    :my_short_hostname => node['server_short_hostname'],
-    :partner_ip => node['server_partner_ip'],
-    :partner_short_hostname => node['server_partner_short_hostname']
+    :resource => node['drbd']['resource']
   )
   owner "root"
   group "root"

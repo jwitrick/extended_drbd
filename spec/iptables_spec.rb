@@ -1,4 +1,4 @@
-require 'chefspec'
+require 'spec_helper'
 
 describe 'extended_drbd::iptables' do
   let(:recipe) { 'extended_drbd::iptables' }
@@ -7,27 +7,36 @@ describe 'extended_drbd::iptables' do
   let(:partner_name) { "test2" }
   let(:partner_ip) { "192.168.1.2" }
   let(:chef_run) {
-    runner = ChefSpec::ChefRunner.new(platform: 'redhat', version: '6.3',
-      :step_into => ['extended_drbd_immutable_file']) do 
-      |node|
-      node.automatic_attrs['fqdn'] = server_name
-      node.automatic_attrs['ipaddress'] = server_ip
+    runner = ChefSpec::ChefRunner.new(RUNNER_OPTS.merge(
+      :step_into => ['extended_drbd_immutable_file'])) do |node|
+        node.automatic_attrs['fqdn'] = server_name
+        node.automatic_attrs['ipaddress'] = server_ip
 
-      #For some reason if other cookbooks that change this value
-      #are within the same cookbook root level then there atts values
-      #override the default one
-      node.override['drbd']['resource'] = "data"
-      node.normal['drbd']['server']['hostname'] = server_name
-      node.normal['drbd']['server']['ipaddress'] = server_ip
-      node.normal['drbd']['partner']['ipaddress'] = partner_ip
-      node.normal['drbd']['partner']['hostname'] = partner_name
-    end
+        #For some reason if other cookbooks that change this value
+        #are within the same cookbook root level then there atts values
+        #override the default one
+        node.override['drbd']['resource'] = "data"
+        node.normal['drbd']['server']['hostname'] = server_name
+        node.normal['drbd']['server']['ipaddress'] = server_ip
+        node.normal['drbd']['partner']['ipaddress'] = partner_ip
+        node.normal['drbd']['partner']['hostname'] = partner_name
+      end
     runner
   }
 
-  shared_examples_for 'extended_drbd::iptables - enabled' do
+  before :each do
+    Chef::Recipe.any_instance.stub(:iptables_rule)
+    Chef::ResourceCollection.any_instance.stub(:find).with(
+      'execute[rebuild-iptables]')
+  end
 
+  shared_examples_for 'extended_drbd::iptables - enabled' do
     it 'should include recipe iptables' do
+      Chef::Recipe.any_instance.unstub(:iptables_rule)
+      Chef::Recipe.any_instance.should_receive(:iptables_rule).
+        with('drbd_port').and_yield
+      Chef::Recipe.any_instance.should_receive(:source).
+        with('iptables/drbd.erb')
       chef_run.converge recipe
       expect(chef_run).to include_recipe 'iptables'
     end
@@ -40,11 +49,15 @@ describe 'extended_drbd::iptables' do
     end
 
     it 'should build file bc does not exists' do
+      Chef::Recipe.any_instance.unstub(:iptables_rule)
+      Chef::Recipe.any_instance.should_receive(:iptables_rule).
+        with('drbd_port').and_yield
+      Chef::Recipe.any_instance.should_receive(:source).
+        with('iptables/drbd.erb')
       chef_run.converge recipe
-      expect(chef_run).to create_file '/etc/iptables.d/drbd_port'
     end
 
-    it 'should not execute rebuild when the file does not exist' do
+    it 'should not execute rebuild when the file does exist' do
       File.stub(:exists?).and_call_original
       File.stub(:exists?).with('/etc/iptables.d/drbd_port').and_return(true)
       chef_run.converge recipe

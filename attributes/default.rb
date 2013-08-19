@@ -11,14 +11,14 @@ end
 
 default['drbd']['remote_host'] = nil
 default['drbd']['disk']['start'] = "/dev/"
-#default['drbd']['mount'] = "/data"
-default['drbd']['fs_type'] = "ext3"
+default_unless['drbd']['fs_type'] = "ext3"
 default['drbd']['dev'] = "/dev/drbd0"
 default['drbd']['master'] = false
 default['drbd']['port'] = 7789
 default['drbd']['syncrate'] = "36M"
 default['drbd']['resource'] = "data"
 default['drbd']['disk']['location'] = "/dev/local/#{node['drbd']['resource']}"
+default['drbd']['wait_til_synced'] = true
 
 default['drbd']['config_file'] = "/etc/drbd.conf"
 
