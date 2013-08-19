@@ -19,6 +19,7 @@ default['drbd']['port'] = 7789
 default['drbd']['syncrate'] = "36M"
 default['drbd']['resource'] = "data"
 default['drbd']['disk']['location'] = "/dev/local/#{node['drbd']['resource']}"
+default['drbd']['wait_til_synced'] = true
 
 default['drbd']['config_file'] = "/etc/drbd.conf"
 

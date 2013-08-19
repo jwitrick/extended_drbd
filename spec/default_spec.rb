@@ -20,6 +20,9 @@ describe 'extended_drbd::default' do
       node.normal['drbd']['partner']['ipaddress'] = partner_ip
       node.normal['drbd']['partner']['hostname'] = partner_name
     end
+    Chef::Recipe.any_instance.stub(:search).with(:node,
+      "fqdn:\"#{partner_name}\"").and_return([{ 'id' => partner_name,
+        "ipaddress"=> partner_ip }])
     runner
   }
 
@@ -42,18 +45,6 @@ describe 'extended_drbd::default' do
       chef_run.converge recipe
       actual_name = chef_run.node['drbd']['server']['hostname']
       expect(actual_name).to eql(server_name)
-    end
-
-    it 'should log a msg about saying chhef solo when partner name is nil' do
-      chef_run.node.normal['drbd']['partner']['hostname'] = nil
-      chef_run.converge recipe
-      expect(chef_run).to log 'You are running as solo, search does not work'
-    end
-
-    it 'should log a msg about saying chhef solo when partner ip is nil' do
-      chef_run.node.normal['drbd']['partner']['ipaddress'] = nil
-      chef_run.converge recipe
-      expect(chef_run).to log 'You are running as solo, search does not work'
     end
 
     it 'should log msg about disk resource' do

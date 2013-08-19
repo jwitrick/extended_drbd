@@ -24,7 +24,12 @@ if node['iptables']['enabled']
     source "iptables/drbd.erb"
   end
 
-  if not ::File.exists?("/etc/iptables.d/drbd_port")
+  iptables_rule "ssh_port" do
+    source "iptables/ssh.erb"
+  end
+
+  if not ::File.exists?("/etc/iptables.d/drbd_port") or
+    not ::File.exists?("/etc/iptables.d/ssh_port")
     #This is a hack to make it open the port before drbd service runs
     ruby_block "rebuild iptables now" do
       block do

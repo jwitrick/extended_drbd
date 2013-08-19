@@ -1,4 +1,4 @@
-extended_drbd
+extended\_drbd
 =============
 
 This cookbook is designed to setup and configure a pair of server with
@@ -38,7 +38,7 @@ You will need to have the following attribute values specified:
 Note: If you do not specify both attributes then the chef run will error out.
 
 Once one server has been specified as drbd master you can add the recipe
-"drbd::drbd_fresh_install" to the run_list of both servers.
+"drbd::drbd\_fresh\_install" to the run\_list of both servers.
 
 # How to use when adding a new server to another server running drbd:
 
@@ -48,7 +48,7 @@ master, and you dont have to be running chef-client on the other server.
 # How to use when changing the drbd.conf file:
 
 On which ever server you are updated (or both) add the recipe
-"drbd::drbd_inplace_upgrade" to the server's run_list. And the next
+"drbd::drbd\_inplace\_upgrade" to the server's run\_list. And the next
 time Chef-client runs it will preform the changes in a safe way.
 
 The way I have used this have been to call this drbd cookbook from within
@@ -68,7 +68,7 @@ Attributes:
  * `default['drbd']['packages'] = ["kmod-drbd83", "drbd83"]`
  * `default['drbd']['disk']['location'] = "/dev/local/data"`
  * `default['drbd']['mount'] = "/data"`
- * `default['drbd']['fs_type'] = "ext3"`
+ * `default_unless['drbd']['fs_type'] = "ext3"`
  * `default['drbd']['dev'] = "/dev/drbd0"`
  * `default['drbd']['master'] = false`
  * `default['drbd']['port'] = 7789`
