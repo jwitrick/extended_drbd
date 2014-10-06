@@ -66,24 +66,12 @@ describe 'extended_drbd::iptables' do
 
   end
 
-  shared_examples_for 'extended_drbd::iptables - disabled' do
-    before :each do
-      chef_run.node.normal['iptables']['enabled'] = false
-    end
-
-    it 'should include recipe iptables::disabled' do
-      chef_run.converge recipe
-      expect(chef_run).to include_recipe 'iptables::disabled'
-    end
-  end
-
   context 'RHEL5' do
     before :each do
       chef_run.node.automatic_attrs['platform_version'] = '5.8'
     end
 
     it_should_behave_like 'extended_drbd::iptables - enabled'
-    it_should_behave_like 'extended_drbd::iptables - disabled'
 
   end
 
@@ -92,7 +80,6 @@ describe 'extended_drbd::iptables' do
     end
 
     it_should_behave_like 'extended_drbd::iptables - enabled'
-    it_should_behave_like 'extended_drbd::iptables - disabled'
   end
 end
 

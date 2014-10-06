@@ -32,8 +32,6 @@ if node['iptables']['enabled']
       notifies :run, "execute[rebuild-iptables]", :immediately
     end
   end
-else
-  include_recipe "iptables::disabled"
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby
