@@ -6,15 +6,15 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 
 include_recipe "#{@cookbook_name}"
 
@@ -30,7 +30,7 @@ remote_ip = node['drbd']['partner']['ipaddress']
 
 execute "drbdadm create-md all" do
   command "echo 'Running create-md' ; yes yes |drbdadm create-md all"
-  not_if { ::File.exists?(drbd_stopf) }
+  not_if { ::File.exists?(drbd_initf) }
   action :run
   notifies :restart, "service[drbd]", :immediately
   notifies :create, "extended_drbd_immutable_file[#{drbd_initf}]", :immediately
@@ -69,7 +69,7 @@ drbdsetup #{node['drbd']['dev']} syncer -r 110M
     master = node['drbd']['master']
     drbd_chk_out = Mixlib::ShellOut.new(drbd_chk_cmd).run_command.stdout
     primary = drbd_chk_out.include?("Primary/")
-    if master or primary and not ::File.exists?(drbd_stopf)
+    if master or primary and not ::File.exists?(drbd_initf)
       true
     end
   end
@@ -105,7 +105,7 @@ end
 execute "change sync rate on secondary server if this is an inplace upgrade" do
   command "drbdsetup #{node['drbd']['dev']} syncer -r 110M"
   action :run
-  only_if { system(drbd_secondary_check) and not ::File.exists?(drbd_stopf) }
+  only_if { system(drbd_secondary_check) and not ::File.exists?(drbd_initf) }
 end
 
 if node['drbd']['wait_til_synced']
@@ -113,7 +113,7 @@ if node['drbd']['wait_til_synced']
     command "grep -q 'ds:UpToDate/UpToDate' /proc/drbd"
     message "Wait until drbd is not in an inconsistent state"
     wait_interval 60
-    not_if { ::File.exists?(drbd_stopf) }
+    not_if { ::File.exists?(drbd_syncf) }
     notifies :run, "execute[adjust drbd]", :immediately
     notifies :create, "extended_drbd_immutable_file[#{drbd_syncf}]",
       :immediately
