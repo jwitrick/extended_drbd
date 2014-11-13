@@ -126,7 +126,7 @@ describe 'extended_drbd::drbd_fresh_install' do
       chef_run.node.normal['drbd']['master'] = true
     end
     it_should_behave_like 'extended_drbd::drbd_fresh_install'
-    it_should_behave_like 'drbd_fresh_install - stop file exists'
+    it_should_behave_like 'drbd_fresh_install - init file exists'
     it_should_behave_like 'drbd_fresh_install - no stop file'
 
     it 'should set this node as drbd master once primary attr is set' do
@@ -150,7 +150,7 @@ describe 'extended_drbd::drbd_fresh_install' do
       chef_run.node.normal['drbd']['master'] = false
     end
     it_should_behave_like 'extended_drbd::drbd_fresh_install'
-    it_should_behave_like 'drbd_fresh_install - stop file exists'
+    it_should_behave_like 'drbd_fresh_install - init file exists'
     it_should_behave_like 'drbd_fresh_install - no stop file'
   end
 
