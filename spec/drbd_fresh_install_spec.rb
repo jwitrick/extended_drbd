@@ -47,10 +47,10 @@ describe 'extended_drbd::drbd_fresh_install' do
     end
   end
 
-  shared_examples_for 'drbd_fresh_install - stop file exists' do
+  shared_examples_for 'drbd_fresh_install - init file exists' do
     before :each do
       File.stub(:exists?).and_call_original
-      File.stub(:exists?).with('/etc/drbd_stop_file').and_return(true)
+      File.stub(:exists?).with('/etc/drbd_init_file').and_return(true)
       File.stub(:exists?).with('/etc/drbd.conf').and_return(true)
     end
 
@@ -68,7 +68,7 @@ describe 'extended_drbd::drbd_fresh_install' do
   shared_examples_for 'drbd_fresh_install - no stop file' do
     before :each do
       File.stub(:exists?).and_call_original
-      File.stub(:exists?).with('/etc/drbd_stop_file').and_return(false)
+      File.stub(:exists?).with('/etc/drbd_init_file').and_return(false)
       File.stub(:exists?).with('/etc/drbd.conf').and_return(false)
     end
 
@@ -126,7 +126,7 @@ describe 'extended_drbd::drbd_fresh_install' do
       chef_run.node.normal['drbd']['master'] = true
     end
     it_should_behave_like 'extended_drbd::drbd_fresh_install'
-    it_should_behave_like 'drbd_fresh_install - stop file exists'
+    it_should_behave_like 'drbd_fresh_install - init file exists'
     it_should_behave_like 'drbd_fresh_install - no stop file'
 
     it 'should set this node as drbd master once primary attr is set' do
@@ -150,7 +150,7 @@ describe 'extended_drbd::drbd_fresh_install' do
       chef_run.node.normal['drbd']['master'] = false
     end
     it_should_behave_like 'extended_drbd::drbd_fresh_install'
-    it_should_behave_like 'drbd_fresh_install - stop file exists'
+    it_should_behave_like 'drbd_fresh_install - init file exists'
     it_should_behave_like 'drbd_fresh_install - no stop file'
   end
 
